@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Pagination, Tag, Text } from '@vtex/shoreline'
+import { Tag, Text } from '@vtex/shoreline'
 import { TsTable } from '@vtex/shoreline-ts-table'
 import { useMemo } from 'react'
 import type { EpisodeListItem } from './simpsons-api.ts'
@@ -15,19 +15,11 @@ function formatAirdate(value: string): string {
 
 export type EpisodesTableProps = {
 	episodes: EpisodeListItem[]
-	page: number
-	totalCount: number
-	listLoading: boolean
-	onPageChange: (page: number) => void
 	onEpisodeSelect: (episode: EpisodeListItem) => void
 }
 
 export function EpisodesTable({
 	episodes,
-	page,
-	totalCount,
-	listLoading,
-	onPageChange,
 	onEpisodeSelect,
 }: EpisodesTableProps) {
 	const columns = useMemo<ColumnDef<EpisodeListItem>[]>(
@@ -58,28 +50,19 @@ export function EpisodesTable({
 	)
 
 	return (
-		<>
-			<TsTable<EpisodeListItem>
-				data={episodes}
-				columns={columns}
-				columnWidths={['auto', 'auto', 'minmax(12rem, 1fr)', 'auto']}
-				options={{
-					getRowId: (row) => String(row.id),
-				}}
-				rowClick={{
-					type: 'action',
-					onClick: (row) => {
-						onEpisodeSelect(row.original)
-					},
-				}}
-			/>
-			<Pagination
-				page={page}
-				total={totalCount}
-				size={EPISODES_PAGE_SIZE}
-				loading={listLoading}
-				onPageChange={onPageChange}
-			/>
-		</>
+		<TsTable<EpisodeListItem>
+			data={episodes}
+			columns={columns}
+			columnWidths={['auto', 'auto', 'minmax(12rem, 1fr)', 'auto']}
+			options={{
+				getRowId: (row) => String(row.id),
+			}}
+			rowClick={{
+				type: 'action',
+				onClick: (row) => {
+					onEpisodeSelect(row.original)
+				},
+			}}
+		/>
 	)
 }

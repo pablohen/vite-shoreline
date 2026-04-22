@@ -1,20 +1,22 @@
 import {
-	Alert,
+	Collection,
+	CollectionRow,
+	CollectionView,
 	DrawerProvider,
 	Page,
 	PageContent,
 	PageHeader,
 	PageHeading,
-	Spinner,
-	Stack,
+	Pagination,
 } from '@vtex/shoreline'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EpisodeDetailsDrawer } from './EpisodeDetailsDrawer.tsx'
-import { EpisodesTable } from './EpisodesTable.tsx'
+import { EPISODES_PAGE_SIZE, EpisodesTable } from './EpisodesTable.tsx'
 import { type EpisodeListItem, fetchEpisodesPage } from './simpsons-api.ts'
 
 export function EpisodesPage() {
 	const [page, setPage] = useState(1)
+	const [retryCount, setRetryCount] = useState(0)
 	const [totalCount, setTotalCount] = useState(0)
 	const [episodes, setEpisodes] = useState<EpisodeListItem[]>([])
 	const [listLoading, setListLoading] = useState(true)
@@ -34,6 +36,7 @@ export function EpisodesPage() {
 	}, [])
 
 	useEffect(() => {
+		void retryCount
 		let cancelled = false
 		setListLoading(true)
 		setListError(null)
@@ -61,7 +64,44 @@ export function EpisodesPage() {
 		return () => {
 			cancelled = true
 		}
-	}, [page])
+	}, [page, retryCount])
+
+	const collectionStatus = useMemo(() => {
+		if (listError) {
+			return 'error' as const
+		}
+		if (listLoading && episodes.length === 0) {
+			return 'loading' as const
+		}
+		if (!listLoading && !listError && episodes.length === 0) {
+			return 'empty' as const
+		}
+		return 'ready' as const
+	}, [listError, listLoading, episodes.length])
+
+	const collectionMessages = useMemo(() => {
+		if (listError) {
+			return {
+				'error-heading': listError,
+				'error-action': 'Try again',
+			}
+		}
+		if (!listLoading && !listError && episodes.length === 0) {
+			return {
+				'empty-heading': 'No episodes',
+				'empty-description': 'There are no episodes to show.',
+			}
+		}
+		return undefined
+	}, [listError, listLoading, episodes.length])
+
+	const paginationProps = {
+		page,
+		total: totalCount,
+		size: EPISODES_PAGE_SIZE,
+		loading: listLoading,
+		onPageChange: setPage,
+	}
 
 	return (
 		<DrawerProvider open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
@@ -69,26 +109,33 @@ export function EpisodesPage() {
 				<PageHeader>
 					<PageHeading>The Simpsons — Episodes</PageHeading>
 				</PageHeader>
-				<PageContent>
-					<Stack space="$space-6">
-						{listError ? <Alert variant="critical">{listError}</Alert> : null}
 
-						{listLoading && episodes.length === 0 ? (
-							<Spinner size={24} description="Loading episodes" />
-						) : (
+				<PageContent>
+					<Collection>
+						<CollectionRow justify="flex-end">
+							<Pagination {...paginationProps} />
+						</CollectionRow>
+
+						<CollectionView
+							status={collectionStatus}
+							messages={collectionMessages}
+							onError={() => {
+								setRetryCount((c) => c + 1)
+							}}
+						>
 							<EpisodesTable
 								episodes={episodes}
-								page={page}
-								totalCount={totalCount}
-								listLoading={listLoading}
-								onPageChange={setPage}
 								onEpisodeSelect={(episode) => {
 									setSelectedId(episode.id)
 									setSelectedPreview(episode)
 								}}
 							/>
-						)}
-					</Stack>
+						</CollectionView>
+
+						<CollectionRow align="flex-end">
+							<Pagination {...paginationProps} />
+						</CollectionRow>
+					</Collection>
 				</PageContent>
 			</Page>
 
