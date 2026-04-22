@@ -14,8 +14,12 @@ import { EpisodeDetailsDrawer } from './EpisodeDetailsDrawer.tsx'
 import { EPISODES_PAGE_SIZE, EpisodesTable } from './EpisodesTable.tsx'
 import { type EpisodeListItem, fetchEpisodesPage } from './simpsons-api.ts'
 
-export function EpisodesPage() {
-	const [page, setPage] = useState(1)
+export type EpisodesPageProps = {
+	page: number
+	onPageChange: (page: number) => void
+}
+
+export function EpisodesPage({ page, onPageChange }: EpisodesPageProps) {
 	const [retryCount, setRetryCount] = useState(0)
 	const [totalCount, setTotalCount] = useState(0)
 	const [episodes, setEpisodes] = useState<EpisodeListItem[]>([])
@@ -100,7 +104,7 @@ export function EpisodesPage() {
 		total: totalCount,
 		size: EPISODES_PAGE_SIZE,
 		loading: listLoading,
-		onPageChange: setPage,
+		onPageChange,
 	}
 
 	return (

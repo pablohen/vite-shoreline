@@ -12,14 +12,18 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@tanstack/react-router": "^1.168.23",
 		"@tanstack/react-table": "^8.21.3",
 		"@vtex/shoreline": "^1.12.3",
 		"@vtex/shoreline-ts-table": "^1.0.107",
 		"react": "^19.2.5",
-		"react-dom": "^19.2.5"
+		"react-dom": "^19.2.5",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
+		"@tanstack/react-router-devtools": "^1.166.13",
+		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^24.12.2",
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",

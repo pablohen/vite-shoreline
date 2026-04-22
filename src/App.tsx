@@ -1,7 +1,6 @@
-import { EpisodesPage } from './EpisodesPage.tsx'
-
-function App() {
-	return <EpisodesPage />
+/**
+ * Root UI is owned by TanStack Router (`RouterProvider` in main.tsx).
+ */
+export default function App() {
+	return null
 }
-
-export default App
