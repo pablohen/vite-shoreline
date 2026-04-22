@@ -1,1 +1,1 @@
-declare module "@vtex/shoreline/css";
+declare module '@vtex/shoreline/css'
