@@ -2,7 +2,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRootRoute, stripSearchParams } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { z } from 'zod'
-import { EpisodesPage } from '../components/EpisodesPage.tsx'
+import { EpisodesPage } from '../pages/EpisodesPage.tsx'
 
 const defaultSearchValues = { page: 1 }
 

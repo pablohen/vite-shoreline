@@ -11,9 +11,12 @@ import {
 	Pagination,
 } from '@vtex/shoreline'
 import { type ComponentProps, useState } from 'react'
+import { EpisodeDetailsDrawer } from '../components/EpisodeDetailsDrawer.tsx'
+import {
+	EPISODES_PAGE_SIZE,
+	EpisodesTable,
+} from '../components/EpisodesTable.tsx'
 import { type EpisodeListItem, fetchEpisodesPage } from '../simpsons-api.ts'
-import { EpisodeDetailsDrawer } from './EpisodeDetailsDrawer.tsx'
-import { EPISODES_PAGE_SIZE, EpisodesTable } from './EpisodesTable.tsx'
 
 export type EpisodesPageProps = {
 	page: number

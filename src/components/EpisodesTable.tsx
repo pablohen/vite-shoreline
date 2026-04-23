@@ -44,6 +44,7 @@ export function EpisodesTable({
 			data={episodes}
 			columns={episodeTableColumns}
 			columnWidths={['auto', 'auto', 'minmax(12rem, 1fr)', 'auto']}
+			stickyHeader
 			options={{
 				getRowId: (row) => String(row.id),
 			}}
