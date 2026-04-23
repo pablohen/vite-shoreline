@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import {
 	Alert,
 	DrawerContent,
@@ -11,13 +12,12 @@ import {
 	Tag,
 	Text,
 } from '@vtex/shoreline'
-import { useEffect, useState } from 'react'
 import {
-	type EpisodeDetail,
 	type EpisodeListItem,
 	episodeImageUrl,
 	fetchEpisodeById,
 } from '../simpsons-api.ts'
+import { formatAirdate } from '../utils/format-airdate.ts'
 
 export type EpisodeDetailsDrawerProps = {
 	episodeId: number | null
@@ -28,48 +28,27 @@ export function EpisodeDetailsDrawer({
 	episodeId,
 	preview,
 }: EpisodeDetailsDrawerProps) {
-	const [detail, setDetail] = useState<EpisodeDetail | null>(null)
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const { data, isPending, isError, error } = useQuery({
+		queryKey: ['episodes', 'detail', episodeId] as const,
+		queryFn: () => {
+			if (episodeId == null) {
+				throw new Error('No episode id')
+			}
+			return fetchEpisodeById(episodeId)
+		},
+		enabled: episodeId != null,
+	})
 
-	useEffect(() => {
-		if (episodeId == null) {
-			setDetail(null)
-			setError(null)
-			return
-		}
-		let cancelled = false
-		setDetail(null)
-		setLoading(true)
-		setError(null)
-		fetchEpisodeById(episodeId)
-			.then((d) => {
-				if (!cancelled) {
-					setDetail(d)
-				}
-			})
-			.catch((e: unknown) => {
-				if (!cancelled) {
-					setError(
-						e instanceof Error ? e.message : 'Failed to load episode details',
-					)
-					setDetail(null)
-				}
-			})
-			.finally(() => {
-				if (!cancelled) {
-					setLoading(false)
-				}
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [episodeId])
-
-	const displayEpisode = detail ?? preview
+	const displayEpisode = data ?? preview
 	const title = preview?.name ?? displayEpisode?.name ?? 'Episode'
-	const descriptionText = detail?.description?.trim()
+	const descriptionText = data?.description?.trim()
 	const synopsisText = displayEpisode?.synopsis?.trim()
+
+	const errorMessage = isError
+		? error instanceof Error
+			? error.message
+			: 'Failed to load episode details'
+		: null
 
 	return (
 		<DrawerPopover>
@@ -79,22 +58,27 @@ export function EpisodeDetailsDrawer({
 			</DrawerHeader>
 			<DrawerContent>
 				<Stack space="$space-4">
-					{error ? <Alert variant="critical">{error}</Alert> : null}
-					{loading ? (
+					{Boolean(errorMessage) && (
+						<Alert variant="critical">{errorMessage}</Alert>
+					)}
+
+					{isPending && !displayEpisode && (
 						<Spinner size={24} description="Loading details" />
-					) : displayEpisode ? (
+					)}
+
+					{Boolean(displayEpisode) && (
 						<>
 							<Stack horizontal space="$space-2">
-								<Tag color="blue">S{displayEpisode.season}</Tag>
-								<Tag color="gray">E{displayEpisode.episode_number}</Tag>
-								{displayEpisode.airdate ? (
+								<Tag color="blue">S{displayEpisode?.season}</Tag>
+								<Tag color="gray">E{displayEpisode?.episode_number}</Tag>
+								{Boolean(displayEpisode?.airdate) && (
 									<Text as="span" variant="caption1">
-										Aired {displayEpisode.airdate}
+										Aired {formatAirdate(displayEpisode?.airdate ?? '')}
 									</Text>
-								) : null}
+								)}
 							</Stack>
 							<img
-								src={episodeImageUrl(displayEpisode.image_path)}
+								src={episodeImageUrl(displayEpisode?.image_path ?? '')}
 								alt={`${title} — promotional still`}
 								width={640}
 								height={360}
@@ -124,7 +108,7 @@ export function EpisodeDetailsDrawer({
 								</Stack>
 							</Stack>
 						</>
-					) : null}
+					)}
 				</Stack>
 			</DrawerContent>
 		</DrawerPopover>

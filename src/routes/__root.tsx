@@ -1,3 +1,4 @@
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRootRoute, stripSearchParams } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { z } from 'zod'
@@ -37,6 +38,9 @@ function RootLayout() {
 					})
 				}}
 			/>
+			{import.meta.env.DEV ? (
+				<ReactQueryDevtools initialIsOpen={false} />
+			) : null}
 			<TanStackRouterDevtools />
 		</>
 	)

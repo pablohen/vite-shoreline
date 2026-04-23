@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import {
 	Collection,
 	CollectionRow,
@@ -9,7 +10,7 @@ import {
 	PageHeading,
 	Pagination,
 } from '@vtex/shoreline'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { type ComponentProps, useState } from 'react'
 import { type EpisodeListItem, fetchEpisodesPage } from '../simpsons-api.ts'
 import { EpisodeDetailsDrawer } from './EpisodeDetailsDrawer.tsx'
 import { EPISODES_PAGE_SIZE, EpisodesTable } from './EpisodesTable.tsx'
@@ -20,11 +21,18 @@ export type EpisodesPageProps = {
 }
 
 export function EpisodesPage({ page, onPageChange }: EpisodesPageProps) {
-	const [retryCount, setRetryCount] = useState(0)
-	const [totalCount, setTotalCount] = useState(0)
-	const [episodes, setEpisodes] = useState<EpisodeListItem[]>([])
-	const [listLoading, setListLoading] = useState(true)
-	const [listError, setListError] = useState<string | null>(null)
+	const { data, isPending, isError, isFetching, error, refetch } = useQuery({
+		queryKey: ['episodes', 'list', page] as const,
+		queryFn: () => fetchEpisodesPage(page),
+	})
+
+	const episodes = data?.results ?? []
+	const totalCount = data?.count ?? 0
+	const listError = isError
+		? error instanceof Error
+			? error.message
+			: 'Failed to load episodes'
+		: null
 
 	const [selectedId, setSelectedId] = useState<number | null>(null)
 	const [selectedPreview, setSelectedPreview] =
@@ -32,118 +40,89 @@ export function EpisodesPage({ page, onPageChange }: EpisodesPageProps) {
 
 	const drawerOpen = selectedId !== null
 
-	const handleDrawerOpenChange = useCallback((open: boolean) => {
+	function handleDrawerOpenChange(open: boolean) {
 		if (!open) {
 			setSelectedId(null)
 			setSelectedPreview(null)
 		}
-	}, [])
-
-	useEffect(() => {
-		void retryCount
-		let cancelled = false
-		setListLoading(true)
-		setListError(null)
-		fetchEpisodesPage(page)
-			.then((res) => {
-				if (!cancelled) {
-					setEpisodes(res.results)
-					setTotalCount(res.count)
-				}
-			})
-			.catch((e: unknown) => {
-				if (!cancelled) {
-					setListError(
-						e instanceof Error ? e.message : 'Failed to load episodes',
-					)
-					setEpisodes([])
-					setTotalCount(0)
-				}
-			})
-			.finally(() => {
-				if (!cancelled) {
-					setListLoading(false)
-				}
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [page, retryCount])
-
-	const collectionStatus = useMemo(() => {
+	}
+	const getCollectionStatus = () => {
 		if (listError) {
-			return 'error' as const
+			return 'error'
+		} else if (isPending && episodes.length === 0) {
+			return 'loading'
+		} else if (
+			!isPending &&
+			!isFetching &&
+			!listError &&
+			episodes.length === 0
+		) {
+			return 'empty'
+		} else {
+			return 'ready'
 		}
-		if (listLoading && episodes.length === 0) {
-			return 'loading' as const
-		}
-		if (!listLoading && !listError && episodes.length === 0) {
-			return 'empty' as const
-		}
-		return 'ready' as const
-	}, [listError, listLoading, episodes.length])
+	}
 
-	const collectionMessages = useMemo(() => {
+	const getCollectionMessages = () => {
 		if (listError) {
 			return {
 				'error-heading': listError,
 				'error-action': 'Try again',
 			}
-		}
-		if (!listLoading && !listError && episodes.length === 0) {
+		} else if (!isPending && !isError && episodes.length === 0) {
 			return {
 				'empty-heading': 'No episodes',
 				'empty-description': 'There are no episodes to show.',
 			}
 		}
-		return undefined
-	}, [listError, listLoading, episodes.length])
+	}
 
-	const paginationProps = {
+	const paginationProps: ComponentProps<typeof Pagination> = {
 		page,
 		total: totalCount,
 		size: EPISODES_PAGE_SIZE,
-		loading: listLoading,
+		loading: isFetching,
 		onPageChange,
 	}
 
 	return (
-		<DrawerProvider open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
-			<Page>
-				<PageHeader>
-					<PageHeading>The Simpsons — Episodes</PageHeading>
-				</PageHeader>
+		<Page>
+			<PageHeader>
+				<PageHeading>The Simpsons — Episodes</PageHeading>
+			</PageHeader>
 
-				<PageContent>
-					<Collection>
-						<CollectionRow justify="flex-end">
-							<Pagination {...paginationProps} />
-						</CollectionRow>
+			<PageContent>
+				<Collection>
+					<CollectionRow justify="flex-end">
+						<Pagination {...paginationProps} />
+					</CollectionRow>
 
-						<CollectionView
-							status={collectionStatus}
-							messages={collectionMessages}
-							onError={() => {
-								setRetryCount((c) => c + 1)
+					<CollectionView
+						status={getCollectionStatus()}
+						messages={getCollectionMessages()}
+						onError={refetch}
+					>
+						<EpisodesTable
+							episodes={episodes}
+							onEpisodeSelect={(episode) => {
+								setSelectedId(episode.id)
+								setSelectedPreview(episode)
 							}}
-						>
-							<EpisodesTable
-								episodes={episodes}
-								onEpisodeSelect={(episode) => {
-									setSelectedId(episode.id)
-									setSelectedPreview(episode)
-								}}
-							/>
-						</CollectionView>
+						/>
+					</CollectionView>
 
-						<CollectionRow align="flex-end">
-							<Pagination {...paginationProps} />
-						</CollectionRow>
-					</Collection>
-				</PageContent>
-			</Page>
+					<CollectionRow align="flex-end">
+						<Pagination {...paginationProps} />
+					</CollectionRow>
+				</Collection>
+			</PageContent>
 
-			<EpisodeDetailsDrawer episodeId={selectedId} preview={selectedPreview} />
-		</DrawerProvider>
+			<DrawerProvider open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+				<EpisodeDetailsDrawer
+					episodeId={selectedId}
+					preview={selectedPreview}
+				/>
+			</DrawerProvider>
+		</Page>
 	)
 }
