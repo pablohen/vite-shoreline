@@ -1,27 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-	Collection,
-	CollectionRow,
-	CollectionView,
 	DrawerProvider,
 	Page,
 	PageContent,
 	PageHeader,
 	PageHeaderRow,
 	PageHeading,
-	Pagination,
 	Tab,
 	TabList,
 	TabPanel,
 	TabProvider,
 } from '@vtex/shoreline'
-import { type ComponentProps, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CharacterDetailsDrawer } from '../components/CharacterDetailsDrawer.tsx'
-import { CharactersTable } from '../components/CharactersTable.tsx'
+import { CharactersTabPanel } from '../components/CharactersTabPanel.tsx'
 import { EpisodeDetailsDrawer } from '../components/EpisodeDetailsDrawer.tsx'
-import { EpisodesTable } from '../components/EpisodesTable.tsx'
+import { EpisodesTabPanel } from '../components/EpisodesTabPanel.tsx'
 import { LocationDetailsDrawer } from '../components/LocationDetailsDrawer.tsx'
-import { LocationsTable } from '../components/LocationsTable.tsx'
+import { LocationsTabPanel } from '../components/LocationsTabPanel.tsx'
 import {
 	type CharacterListItem,
 	type EpisodeListItem,
@@ -32,30 +28,13 @@ import {
 	SIMPSONS_PAGE_SIZE,
 } from '../simpsons-api.ts'
 import { isSimpsonsTabId, type SimpsonsTabId } from '../simpsons-tabs.ts'
+import { getErrorMessage } from '../utils/get-error-message.ts'
 
 export type SimpsonsBrowsePageProps = {
 	tab: SimpsonsTabId
 	page: number
 	onTabChange: (tab: SimpsonsTabId) => void
 	onPageChange: (page: number) => void
-}
-
-function getCollectionStatus(
-	listError: string | null,
-	isPending: boolean,
-	isFetching: boolean,
-	rowCount: number,
-): ComponentProps<typeof CollectionView>['status'] {
-	if (listError) {
-		return 'error'
-	}
-	if (isPending && rowCount === 0) {
-		return 'loading'
-	}
-	if (!isPending && !isFetching && !listError && rowCount === 0) {
-		return 'empty'
-	}
-	return 'ready'
 }
 
 type BrowseDrawerState =
@@ -92,11 +71,11 @@ export function SimpsonsBrowsePage({
 
 	const drawerOpen = drawer !== null
 
-	// Close drawer when the route tab changes (e.g. URL / back-forward).
-	// biome-ignore lint/correctness/useExhaustiveDependencies: tab is the intentional trigger
-	useEffect(() => {
-		setDrawer(null)
-	}, [tab])
+	function handleTabChange(tab: SimpsonsTabId) {
+		if (isSimpsonsTabId(tab)) {
+			onTabChange(tab)
+		}
+	}
 
 	function handleDrawerOpenChange(open: boolean) {
 		if (!open) {
@@ -104,64 +83,15 @@ export function SimpsonsBrowsePage({
 		}
 	}
 
-	const episodes = episodesQuery.data?.results ?? []
-	const episodesTotal = episodesQuery.data?.count ?? 0
-	const episodesError = episodesQuery.isError
-		? episodesQuery.error instanceof Error
-			? episodesQuery.error.message
-			: 'Failed to load episodes'
-		: null
-
-	const characters = charactersQuery.data?.results ?? []
-	const charactersTotal = charactersQuery.data?.count ?? 0
-	const charactersError = charactersQuery.isError
-		? charactersQuery.error instanceof Error
-			? charactersQuery.error.message
-			: 'Failed to load characters'
-		: null
-
-	const locations = locationsQuery.data?.results ?? []
-	const locationsTotal = locationsQuery.data?.count ?? 0
-	const locationsError = locationsQuery.isError
-		? locationsQuery.error instanceof Error
-			? locationsQuery.error.message
-			: 'Failed to load locations'
-		: null
-
-	const episodesPaginationProps: ComponentProps<typeof Pagination> = {
-		page,
-		total: episodesTotal,
-		size: SIMPSONS_PAGE_SIZE,
-		loading: episodesQuery.isFetching,
-		onPageChange,
-	}
-
-	const charactersPaginationProps: ComponentProps<typeof Pagination> = {
-		page,
-		total: charactersTotal,
-		size: SIMPSONS_PAGE_SIZE,
-		loading: charactersQuery.isFetching,
-		onPageChange,
-	}
-
-	const locationsPaginationProps: ComponentProps<typeof Pagination> = {
-		page,
-		total: locationsTotal,
-		size: SIMPSONS_PAGE_SIZE,
-		loading: locationsQuery.isFetching,
-		onPageChange,
-	}
+	// Close drawer when the route tab changes (e.g. URL / back-forward).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tab is the intentional trigger
+	useEffect(() => {
+		setDrawer(null)
+	}, [tab])
 
 	return (
 		<Page>
-			<TabProvider
-				selectedId={tab}
-				setSelectedId={(id) => {
-					if (isSimpsonsTabId(id)) {
-						onTabChange(id)
-					}
-				}}
-			>
+			<TabProvider selectedId={tab} setSelectedId={handleTabChange}>
 				<PageHeader>
 					<PageHeaderRow>
 						<PageHeading>The Simpsons</PageHeading>
@@ -177,149 +107,90 @@ export function SimpsonsBrowsePage({
 
 				<PageContent layout="standard">
 					<TabPanel tabId="episodes">
-						<Collection>
-							<CollectionRow justify="flex-end">
-								<Pagination {...episodesPaginationProps} />
-							</CollectionRow>
-
-							<CollectionView
-								status={getCollectionStatus(
-									episodesError,
-									episodesQuery.isPending,
-									episodesQuery.isFetching,
-									episodes.length,
-								)}
-								messages={
-									episodesError
-										? {
-												'error-heading': episodesError,
-												'error-action': 'Try again',
-											}
-										: !episodesQuery.isPending &&
-												!episodesQuery.isError &&
-												episodes.length === 0
-											? {
-													'empty-heading': 'No episodes',
-													'empty-description': 'There are no episodes to show.',
-												}
-											: undefined
-								}
-								onError={episodesQuery.refetch}
-							>
-								<EpisodesTable
-									episodes={episodes}
-									onEpisodeSelect={(episode) => {
-										setDrawer({
-											kind: 'episode',
-											id: episode.id,
-											preview: episode,
-										})
-									}}
-								/>
-							</CollectionView>
-
-							<CollectionRow align="flex-end">
-								<Pagination {...episodesPaginationProps} />
-							</CollectionRow>
-						</Collection>
+						<EpisodesTabPanel
+							episodes={episodesQuery.data?.results ?? []}
+							isPending={episodesQuery.isPending}
+							isFetching={episodesQuery.isFetching}
+							isError={episodesQuery.isError}
+							onRefetch={episodesQuery.refetch}
+							onEpisodeSelect={(episode: EpisodeListItem) => {
+								setDrawer({
+									kind: 'episode',
+									id: episode.id,
+									preview: episode,
+								})
+							}}
+							listError={getErrorMessage(
+								episodesQuery.isError,
+								episodesQuery.error,
+								'Failed to load episodes',
+							)}
+							pagination={{
+								page,
+								total: episodesQuery.data?.count ?? 0,
+								size: SIMPSONS_PAGE_SIZE,
+								loading: episodesQuery.isFetching,
+								onPageChange,
+							}}
+						/>
 					</TabPanel>
 
 					<TabPanel tabId="characters">
-						<Collection>
-							<CollectionRow justify="flex-end">
-								<Pagination {...charactersPaginationProps} />
-							</CollectionRow>
-
-							<CollectionView
-								status={getCollectionStatus(
-									charactersError,
-									charactersQuery.isPending,
-									charactersQuery.isFetching,
-									characters.length,
-								)}
-								messages={
-									charactersError
-										? {
-												'error-heading': charactersError,
-												'error-action': 'Try again',
-											}
-										: !charactersQuery.isPending &&
-												!charactersQuery.isError &&
-												characters.length === 0
-											? {
-													'empty-heading': 'No characters',
-													'empty-description':
-														'There are no characters to show.',
-												}
-											: undefined
-								}
-								onError={charactersQuery.refetch}
-							>
-								<CharactersTable
-									characters={characters}
-									onCharacterSelect={(character) => {
-										setDrawer({
-											kind: 'character',
-											id: character.id,
-											preview: character,
-										})
-									}}
-								/>
-							</CollectionView>
-
-							<CollectionRow align="flex-end">
-								<Pagination {...charactersPaginationProps} />
-							</CollectionRow>
-						</Collection>
+						<CharactersTabPanel
+							characters={charactersQuery.data?.results ?? []}
+							isPending={charactersQuery.isPending}
+							isFetching={charactersQuery.isFetching}
+							isError={charactersQuery.isError}
+							onRefetch={charactersQuery.refetch}
+							onCharacterSelect={(character: CharacterListItem) => {
+								setDrawer({
+									kind: 'character',
+									id: character.id,
+									preview: character,
+								})
+							}}
+							listError={getErrorMessage(
+								charactersQuery.isError,
+								charactersQuery.error,
+								'Failed to load characters',
+							)}
+							pagination={{
+								page,
+								total: charactersQuery.data?.count ?? 0,
+								size: SIMPSONS_PAGE_SIZE,
+								loading: charactersQuery.isFetching,
+								onPageChange,
+							}}
+						/>
 					</TabPanel>
 
 					<TabPanel tabId="locations">
-						<Collection>
-							<CollectionRow justify="flex-end">
-								<Pagination {...locationsPaginationProps} />
-							</CollectionRow>
-
-							<CollectionView
-								status={getCollectionStatus(
-									locationsError,
-									locationsQuery.isPending,
-									locationsQuery.isFetching,
-									locations.length,
-								)}
-								messages={
-									locationsError
-										? {
-												'error-heading': locationsError,
-												'error-action': 'Try again',
-											}
-										: !locationsQuery.isPending &&
-												!locationsQuery.isError &&
-												locations.length === 0
-											? {
-													'empty-heading': 'No locations',
-													'empty-description':
-														'There are no locations to show.',
-												}
-											: undefined
-								}
-								onError={locationsQuery.refetch}
-							>
-								<LocationsTable
-									locations={locations}
-									onLocationSelect={(location) => {
-										setDrawer({
-											kind: 'location',
-											id: location.id,
-											preview: location,
-										})
-									}}
-								/>
-							</CollectionView>
-
-							<CollectionRow align="flex-end">
-								<Pagination {...locationsPaginationProps} />
-							</CollectionRow>
-						</Collection>
+						<LocationsTabPanel
+							locations={locationsQuery.data?.results ?? []}
+							isPending={locationsQuery.isPending}
+							isFetching={locationsQuery.isFetching}
+							isError={locationsQuery.isError}
+							onRefetch={locationsQuery.refetch}
+							onLocationSelect={(location: LocationListItem) => {
+								setDrawer({
+									kind: 'location',
+									id: location.id,
+									preview: location,
+								})
+							}}
+							listError={getErrorMessage(
+								locationsQuery.isError,
+								locationsQuery.error,
+								'Failed to load locations',
+							)}
+							pagination={{
+								page,
+								total: locationsQuery.data?.count ?? 0,
+								size: SIMPSONS_PAGE_SIZE,
+								loading: locationsQuery.isFetching,
+								onPageChange,
+							}}
+						/>
 					</TabPanel>
 				</PageContent>
 			</TabProvider>
