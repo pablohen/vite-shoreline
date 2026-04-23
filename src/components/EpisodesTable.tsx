@@ -4,8 +4,6 @@ import { TsTable } from '@vtex/shoreline-ts-table'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { formatAirdate } from '../utils/format-airdate.ts'
 
-export const EPISODES_PAGE_SIZE = 20
-
 const episodeTableColumns: ColumnDef<EpisodeListItem>[] = [
 	{
 		accessorKey: 'season',
