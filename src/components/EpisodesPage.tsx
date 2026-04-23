@@ -10,9 +10,9 @@ import {
 	Pagination,
 } from '@vtex/shoreline'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { type EpisodeListItem, fetchEpisodesPage } from '../simpsons-api.ts'
 import { EpisodeDetailsDrawer } from './EpisodeDetailsDrawer.tsx'
 import { EPISODES_PAGE_SIZE, EpisodesTable } from './EpisodesTable.tsx'
-import { type EpisodeListItem, fetchEpisodesPage } from './simpsons-api.ts'
 
 export type EpisodesPageProps = {
 	page: number

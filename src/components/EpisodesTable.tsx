@@ -2,7 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Tag, Text } from '@vtex/shoreline'
 import { TsTable } from '@vtex/shoreline-ts-table'
 import { useMemo } from 'react'
-import type { EpisodeListItem } from './simpsons-api.ts'
+import type { EpisodeListItem } from '../simpsons-api.ts'
 
 export const EPISODES_PAGE_SIZE = 20
 

@@ -17,7 +17,7 @@ import {
 	type EpisodeListItem,
 	episodeImageUrl,
 	fetchEpisodeById,
-} from './simpsons-api.ts'
+} from '../simpsons-api.ts'
 
 export type EpisodeDetailsDrawerProps = {
 	episodeId: number | null
