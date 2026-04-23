@@ -15,16 +15,20 @@ import {
 	TabPanel,
 	TabProvider,
 } from '@vtex/shoreline'
-import { type ComponentProps, useState } from 'react'
+import { type ComponentProps, useEffect, useState } from 'react'
+import { CharacterDetailsDrawer } from '../components/CharacterDetailsDrawer.tsx'
 import { CharactersTable } from '../components/CharactersTable.tsx'
 import { EpisodeDetailsDrawer } from '../components/EpisodeDetailsDrawer.tsx'
 import { EpisodesTable } from '../components/EpisodesTable.tsx'
+import { LocationDetailsDrawer } from '../components/LocationDetailsDrawer.tsx'
 import { LocationsTable } from '../components/LocationsTable.tsx'
 import {
+	type CharacterListItem,
 	type EpisodeListItem,
 	fetchCharactersPage,
 	fetchEpisodesPage,
 	fetchLocationsPage,
+	type LocationListItem,
 	SIMPSONS_PAGE_SIZE,
 } from '../simpsons-api.ts'
 import { isSimpsonsTabId, type SimpsonsTabId } from '../simpsons-tabs.ts'
@@ -54,6 +58,12 @@ function getCollectionStatus(
 	return 'ready'
 }
 
+type BrowseDrawerState =
+	| null
+	| { kind: 'episode'; id: number; preview: EpisodeListItem }
+	| { kind: 'character'; id: number; preview: CharacterListItem }
+	| { kind: 'location'; id: number; preview: LocationListItem }
+
 export function SimpsonsBrowsePage({
 	tab,
 	page,
@@ -78,18 +88,19 @@ export function SimpsonsBrowsePage({
 		enabled: tab === 'locations',
 	})
 
-	const [selectedEpisodeId, setSelectedEpisodeId] = useState<number | null>(
-		null,
-	)
-	const [selectedEpisodePreview, setSelectedEpisodePreview] =
-		useState<EpisodeListItem | null>(null)
+	const [drawer, setDrawer] = useState<BrowseDrawerState>(null)
 
-	const drawerOpen = selectedEpisodeId !== null
+	const drawerOpen = drawer !== null
+
+	// Close drawer when the route tab changes (e.g. URL / back-forward).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: tab is the intentional trigger
+	useEffect(() => {
+		setDrawer(null)
+	}, [tab])
 
 	function handleDrawerOpenChange(open: boolean) {
 		if (!open) {
-			setSelectedEpisodeId(null)
-			setSelectedEpisodePreview(null)
+			setDrawer(null)
 		}
 	}
 
@@ -193,15 +204,16 @@ export function SimpsonsBrowsePage({
 												}
 											: undefined
 								}
-								onError={() => {
-									void episodesQuery.refetch()
-								}}
+								onError={episodesQuery.refetch}
 							>
 								<EpisodesTable
 									episodes={episodes}
 									onEpisodeSelect={(episode) => {
-										setSelectedEpisodeId(episode.id)
-										setSelectedEpisodePreview(episode)
+										setDrawer({
+											kind: 'episode',
+											id: episode.id,
+											preview: episode,
+										})
 									}}
 								/>
 							</CollectionView>
@@ -241,11 +253,18 @@ export function SimpsonsBrowsePage({
 												}
 											: undefined
 								}
-								onError={() => {
-									void charactersQuery.refetch()
-								}}
+								onError={charactersQuery.refetch}
 							>
-								<CharactersTable characters={characters} />
+								<CharactersTable
+									characters={characters}
+									onCharacterSelect={(character) => {
+										setDrawer({
+											kind: 'character',
+											id: character.id,
+											preview: character,
+										})
+									}}
+								/>
 							</CollectionView>
 
 							<CollectionRow align="flex-end">
@@ -283,11 +302,18 @@ export function SimpsonsBrowsePage({
 												}
 											: undefined
 								}
-								onError={() => {
-									void locationsQuery.refetch()
-								}}
+								onError={locationsQuery.refetch}
 							>
-								<LocationsTable locations={locations} />
+								<LocationsTable
+									locations={locations}
+									onLocationSelect={(location) => {
+										setDrawer({
+											kind: 'location',
+											id: location.id,
+											preview: location,
+										})
+									}}
+								/>
 							</CollectionView>
 
 							<CollectionRow align="flex-end">
@@ -299,10 +325,26 @@ export function SimpsonsBrowsePage({
 			</TabProvider>
 
 			<DrawerProvider open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
-				<EpisodeDetailsDrawer
-					episodeId={selectedEpisodeId}
-					preview={selectedEpisodePreview}
-				/>
+				{drawer?.kind === 'episode' && (
+					<EpisodeDetailsDrawer
+						episodeId={drawer.id}
+						preview={drawer.preview}
+					/>
+				)}
+
+				{drawer?.kind === 'character' && (
+					<CharacterDetailsDrawer
+						characterId={drawer.id}
+						preview={drawer.preview}
+					/>
+				)}
+
+				{drawer?.kind === 'location' && (
+					<LocationDetailsDrawer
+						locationId={drawer.id}
+						preview={drawer.preview}
+					/>
+				)}
 			</DrawerProvider>
 		</Page>
 	)

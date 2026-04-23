@@ -33,6 +33,14 @@ export type CharacterListItem = {
 	portrait_path: string
 }
 
+export type CharacterDetail = CharacterListItem & {
+	description?: string
+	age?: number
+	birthdate?: string | null
+	phrases?: string[]
+	first_appearance_ep?: { id: number; name: string } | null
+}
+
 export type CharactersListResponse = {
 	count: number
 	pages: number
@@ -45,6 +53,10 @@ export type LocationListItem = {
 	town: string
 	use: string
 	image_path: string
+}
+
+export type LocationDetail = LocationListItem & {
+	description?: string
 }
 
 export type LocationsListResponse = {
@@ -94,6 +106,11 @@ export async function fetchCharactersPage(
 	return parseJson<CharactersListResponse>(res)
 }
 
+export async function fetchCharacterById(id: number): Promise<CharacterDetail> {
+	const res = await fetch(`${API_BASE}/characters/${id}`)
+	return parseJson<CharacterDetail>(res)
+}
+
 export async function fetchLocationsPage(
 	page: number,
 ): Promise<LocationsListResponse> {
@@ -101,4 +118,9 @@ export async function fetchLocationsPage(
 	url.searchParams.set('page', String(page))
 	const res = await fetch(url.toString())
 	return parseJson<LocationsListResponse>(res)
+}
+
+export async function fetchLocationById(id: number): Promise<LocationDetail> {
+	const res = await fetch(`${API_BASE}/locations/${id}`)
+	return parseJson<LocationDetail>(res)
 }

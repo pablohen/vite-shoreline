@@ -48,9 +48,13 @@ const characterTableColumns: ColumnDef<CharacterListItem>[] = [
 
 export type CharactersTableProps = {
 	characters: CharacterListItem[]
+	onCharacterSelect: (character: CharacterListItem) => void
 }
 
-export function CharactersTable({ characters }: CharactersTableProps) {
+export function CharactersTable({
+	characters,
+	onCharacterSelect,
+}: CharactersTableProps) {
 	return (
 		<TsTable<CharacterListItem>
 			data={characters}
@@ -64,6 +68,12 @@ export function CharactersTable({ characters }: CharactersTableProps) {
 			stickyHeader
 			options={{
 				getRowId: (row) => String(row.id),
+			}}
+			rowClick={{
+				type: 'action',
+				onClick: (row) => {
+					onCharacterSelect(row.original)
+				},
 			}}
 		/>
 	)

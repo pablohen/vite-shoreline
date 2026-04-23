@@ -24,9 +24,13 @@ const locationTableColumns: ColumnDef<LocationListItem>[] = [
 
 export type LocationsTableProps = {
 	locations: LocationListItem[]
+	onLocationSelect: (location: LocationListItem) => void
 }
 
-export function LocationsTable({ locations }: LocationsTableProps) {
+export function LocationsTable({
+	locations,
+	onLocationSelect,
+}: LocationsTableProps) {
 	return (
 		<TsTable<LocationListItem>
 			data={locations}
@@ -35,6 +39,12 @@ export function LocationsTable({ locations }: LocationsTableProps) {
 			stickyHeader
 			options={{
 				getRowId: (row) => String(row.id),
+			}}
+			rowClick={{
+				type: 'action',
+				onClick: (row) => {
+					onLocationSelect(row.original)
+				},
 			}}
 		/>
 	)
