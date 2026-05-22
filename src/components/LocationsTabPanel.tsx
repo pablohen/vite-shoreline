@@ -24,6 +24,7 @@ export function LocationsTabPanel({
 			items={locations}
 			emptyHeading="No locations"
 			emptyDescription="There are no locations to show."
+			skeletonColumnCount={3}
 			{...queryState}
 		>
 			{(items) => (

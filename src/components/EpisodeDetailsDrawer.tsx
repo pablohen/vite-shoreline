@@ -1,4 +1,4 @@
-import { Heading, Stack, Tag, Text } from '@vtex/shoreline'
+import { Heading, Stack, Tag, Text, Tooltip } from '@vtex/shoreline'
 import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
@@ -6,6 +6,8 @@ import { formatAirdate } from '../utils/format-airdate.ts'
 import { getErrorMessage } from '../utils/get-error-message.ts'
 import { DetailImage } from './DetailImage.tsx'
 import { DetailsDrawerShell } from './DetailsDrawerShell.tsx'
+
+const SYNOPSIS_TOOLTIP_THRESHOLD = 120
 
 export type EpisodeDetailsDrawerProps = {
 	episodeId: number | null
@@ -25,10 +27,32 @@ export function EpisodeDetailsDrawer({
 	const title = preview?.name ?? displayEpisode?.name ?? 'Episode'
 	const descriptionText = data?.description?.trim()
 	const synopsisText = displayEpisode?.synopsis?.trim()
+	const showSynopsisTooltip = Boolean(
+		synopsisText && synopsisText.length > SYNOPSIS_TOOLTIP_THRESHOLD,
+	)
 	const errorMessage = getErrorMessage(
 		isError,
 		error,
 		'Failed to load episode details',
+	)
+
+	const synopsis = (
+		<Text
+			as="p"
+			variant="body"
+			style={
+				showSynopsisTooltip
+					? {
+							display: '-webkit-box',
+							WebkitLineClamp: 3,
+							WebkitBoxOrient: 'vertical',
+							overflow: 'hidden',
+						}
+					: undefined
+			}
+		>
+			{synopsisText || '—'}
+		</Text>
 	)
 
 	return (
@@ -69,9 +93,11 @@ export function EpisodeDetailsDrawer({
 						<Heading level={5} variant="display3">
 							Synopsis
 						</Heading>
-						<Text as="p" variant="body">
-							{synopsisText || '—'}
-						</Text>
+						{showSynopsisTooltip ? (
+							<Tooltip label={synopsisText}>{synopsis}</Tooltip>
+						) : (
+							synopsis
+						)}
 					</Stack>
 				</Stack>
 			</Stack>

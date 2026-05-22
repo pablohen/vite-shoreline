@@ -44,6 +44,7 @@ export type SimpsonsBrowsePageProps = {
 	onTabChange: (tab: SimpsonsTabId) => void
 	onPageChange: (page: number) => void
 	onDetailChange: (detail: number | undefined) => void
+	onNavigateToResourceDetail: (tab: SimpsonsTabId, detailId: number) => void
 }
 
 type BrowseDrawerState =
@@ -98,6 +99,7 @@ export function SimpsonsBrowsePage({
 	onTabChange,
 	onPageChange,
 	onDetailChange,
+	onNavigateToResourceDetail,
 }: SimpsonsBrowsePageProps) {
 	const episodesQuery = useSimpsonsListQuery(
 		'episodes',
@@ -257,6 +259,9 @@ export function SimpsonsBrowsePage({
 					<CharacterDetailsDrawer
 						characterId={drawer.id}
 						preview={drawer.preview}
+						onNavigateToEpisode={(episodeId) => {
+							onNavigateToResourceDetail('episodes', episodeId)
+						}}
 					/>
 				)}
 

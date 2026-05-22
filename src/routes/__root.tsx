@@ -1,6 +1,7 @@
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRootRoute, stripSearchParams } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { ToastStack } from '@vtex/shoreline'
 import { z } from 'zod'
 import { SimpsonsBrowsePage } from '../pages/SimpsonsBrowsePage.tsx'
 import { type SimpsonsTabId, simpsonsTabSchema } from '../simpsons-tabs.ts'
@@ -62,7 +63,19 @@ function RootLayout() {
 						search: (prev) => ({ ...prev, detail: nextDetail }),
 					})
 				}}
+				onNavigateToResourceDetail={(nextTab, detailId) => {
+					void navigate({
+						to: '.',
+						search: (prev) => ({
+							...prev,
+							tab: nextTab,
+							page: 1,
+							detail: detailId,
+						}),
+					})
+				}}
 			/>
+			<ToastStack />
 			{import.meta.env.DEV ? (
 				<>
 					<ReactQueryDevtools initialIsOpen={false} />

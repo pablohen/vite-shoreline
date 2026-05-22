@@ -1,12 +1,16 @@
 import {
 	Alert,
+	Button,
 	DrawerContent,
 	DrawerDismiss,
 	DrawerHeader,
 	DrawerHeading,
 	DrawerPopover,
-	Spinner,
+	Flex,
+	IconCopySimple,
+	Skeleton,
 	Stack,
+	toast,
 } from '@vtex/shoreline'
 import type { ReactNode } from 'react'
 
@@ -17,6 +21,33 @@ export type DetailsDrawerShellProps = {
 	isPending: boolean
 	hasContent: boolean
 	children: ReactNode
+}
+
+function DetailsDrawerSkeleton() {
+	return (
+		<Stack space="$space-4">
+			<Flex gap="$space-2">
+				<Skeleton height="1.5rem" width="4rem" />
+				<Skeleton height="1.5rem" width="4rem" />
+			</Flex>
+			<Skeleton height="12rem" width="100%" />
+			<Stack space="$space-2">
+				<Skeleton height="1rem" width="30%" />
+				<Skeleton height="4rem" width="100%" />
+				<Skeleton height="1rem" width="30%" />
+				<Skeleton height="6rem" width="100%" />
+			</Stack>
+		</Stack>
+	)
+}
+
+async function copyCurrentUrl() {
+	try {
+		await navigator.clipboard.writeText(window.location.href)
+		toast.success('Link copied')
+	} catch {
+		toast.critical('Could not copy link')
+	}
 }
 
 export function DetailsDrawerShell({
@@ -31,7 +62,13 @@ export function DetailsDrawerShell({
 		<DrawerPopover>
 			<DrawerHeader>
 				<DrawerHeading>{title}</DrawerHeading>
-				<DrawerDismiss label={dismissLabel} />
+				<Flex align="center" gap="$space-2">
+					<Button variant="tertiary" onClick={() => void copyCurrentUrl()}>
+						<IconCopySimple />
+						Copy link
+					</Button>
+					<DrawerDismiss label={dismissLabel} />
+				</Flex>
 			</DrawerHeader>
 			<DrawerContent>
 				<Stack space="$space-4">
@@ -39,9 +76,7 @@ export function DetailsDrawerShell({
 						<Alert variant="critical">{errorMessage}</Alert>
 					)}
 
-					{isPending && !hasContent && (
-						<Spinner size={24} description="Loading details" />
-					)}
+					{isPending && !hasContent && <DetailsDrawerSkeleton />}
 
 					{hasContent ? children : null}
 				</Stack>
