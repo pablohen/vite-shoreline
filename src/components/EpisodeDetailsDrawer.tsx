@@ -1,4 +1,4 @@
-import { Heading, Stack, Tag, Text, Tooltip } from '@vtex/shoreline'
+import { Flex, Heading, Stack, Tag, Text, Tooltip } from '@vtex/shoreline'
 import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
@@ -64,7 +64,7 @@ export function EpisodeDetailsDrawer({
 			hasContent={Boolean(displayEpisode)}
 		>
 			<Stack space="$space-2">
-				<Stack horizontal space="$space-2">
+				<Flex align="center" gap="$space-2" style={{ flexWrap: 'wrap' }}>
 					<Tag color="blue">S{displayEpisode?.season}</Tag>
 					<Tag color="gray">E{displayEpisode?.episode_number}</Tag>
 					{Boolean(displayEpisode?.airdate) && (
@@ -72,7 +72,7 @@ export function EpisodeDetailsDrawer({
 							Aired {formatAirdate(displayEpisode?.airdate ?? '')}
 						</Text>
 					)}
-				</Stack>
+				</Flex>
 				<DetailImage
 					src={simpsonsImageUrl(displayEpisode?.image_path ?? '')}
 					alt={`${title} — promotional still`}

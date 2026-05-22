@@ -19,6 +19,11 @@ import { EpisodesTabPanel } from '../components/EpisodesTabPanel.tsx'
 import { LocationDetailsDrawer } from '../components/LocationDetailsDrawer.tsx'
 import { LocationsTabPanel } from '../components/LocationsTabPanel.tsx'
 import {
+	SimpsonsBottomNav,
+	simpsonsPanelId,
+} from '../components/SimpsonsBottomNav.tsx'
+import { useIsMobileNav } from '../hooks/use-media-query.ts'
+import {
 	getListPagination,
 	useSimpsonsListQuery,
 } from '../hooks/use-simpsons-list-query.ts'
@@ -101,6 +106,7 @@ export function SimpsonsBrowsePage({
 	onDetailChange,
 	onNavigateToResourceDetail,
 }: SimpsonsBrowsePageProps) {
+	const isMobileNav = useIsMobileNav()
 	const episodesQuery = useSimpsonsListQuery(
 		'episodes',
 		page,
@@ -185,13 +191,34 @@ export function SimpsonsBrowsePage({
 	}
 
 	return (
-		<Page>
-			<TabProvider selectedId={tab} setSelectedId={handleTabChange}>
+		<TabProvider selectedId={tab} setSelectedId={handleTabChange}>
+			<Page
+				style={
+					isMobileNav
+						? {
+								minHeight: '100dvh',
+								gridTemplateRows: 'auto 1fr auto',
+							}
+						: undefined
+				}
+			>
 				<PageHeader>
 					<PageHeaderRow>
 						<PageHeading>The Simpsons</PageHeading>
 					</PageHeaderRow>
-					<PageHeaderRow>
+					<PageHeaderRow
+						style={
+							isMobileNav
+								? {
+										position: 'absolute',
+										width: 1,
+										height: 1,
+										overflow: 'hidden',
+										clipPath: 'inset(50%)',
+									}
+								: undefined
+						}
+					>
 						<TabList>
 							{SIMPSONS_TAB_IDS.map((tabId) => (
 								<Tab key={tabId} id={tabId}>
@@ -202,8 +229,18 @@ export function SimpsonsBrowsePage({
 					</PageHeaderRow>
 				</PageHeader>
 
-				<PageContent layout="standard">
-					<TabPanel tabId="episodes">
+				<PageContent
+					layout="standard"
+					style={
+						isMobileNav
+							? {
+									minHeight: 0,
+									overflowY: 'auto',
+								}
+							: undefined
+					}
+				>
+					<TabPanel id={simpsonsPanelId('episodes')} tabId="episodes">
 						<EpisodesTabPanel
 							episodes={episodesQuery.data?.results ?? []}
 							onEpisodeSelect={handleItemSelect}
@@ -216,7 +253,7 @@ export function SimpsonsBrowsePage({
 						/>
 					</TabPanel>
 
-					<TabPanel tabId="characters">
+					<TabPanel id={simpsonsPanelId('characters')} tabId="characters">
 						<CharactersTabPanel
 							characters={charactersQuery.data?.results ?? []}
 							onCharacterSelect={handleItemSelect}
@@ -229,7 +266,7 @@ export function SimpsonsBrowsePage({
 						/>
 					</TabPanel>
 
-					<TabPanel tabId="locations">
+					<TabPanel id={simpsonsPanelId('locations')} tabId="locations">
 						<LocationsTabPanel
 							locations={locationsQuery.data?.results ?? []}
 							onLocationSelect={handleItemSelect}
@@ -242,7 +279,11 @@ export function SimpsonsBrowsePage({
 						/>
 					</TabPanel>
 				</PageContent>
-			</TabProvider>
+
+				{isMobileNav ? (
+					<SimpsonsBottomNav tab={tab} onTabChange={onTabChange} />
+				) : null}
+			</Page>
 
 			<DrawerProvider
 				open={drawer !== null}
@@ -272,6 +313,6 @@ export function SimpsonsBrowsePage({
 					/>
 				)}
 			</DrawerProvider>
-		</Page>
+		</TabProvider>
 	)
 }

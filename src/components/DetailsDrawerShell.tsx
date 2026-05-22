@@ -7,12 +7,14 @@ import {
 	DrawerHeading,
 	DrawerPopover,
 	Flex,
+	IconButton,
 	IconCopySimple,
 	Skeleton,
 	Stack,
 	toast,
 } from '@vtex/shoreline'
 import type { ReactNode } from 'react'
+import { useIsMobileNav } from '../hooks/use-media-query.ts'
 
 export type DetailsDrawerShellProps = {
 	title: string
@@ -58,17 +60,43 @@ export function DetailsDrawerShell({
 	hasContent,
 	children,
 }: DetailsDrawerShellProps) {
+	const isMobileNav = useIsMobileNav()
+
+	const copyLinkAction = isMobileNav ? (
+		<IconButton
+			variant="tertiary"
+			label="Copy link"
+			onClick={() => void copyCurrentUrl()}
+		>
+			<IconCopySimple />
+		</IconButton>
+	) : (
+		<Button variant="tertiary" onClick={() => void copyCurrentUrl()}>
+			<IconCopySimple />
+			Copy link
+		</Button>
+	)
+
 	return (
 		<DrawerPopover>
 			<DrawerHeader>
-				<DrawerHeading>{title}</DrawerHeading>
-				<Flex align="center" gap="$space-2">
-					<Button variant="tertiary" onClick={() => void copyCurrentUrl()}>
-						<IconCopySimple />
-						Copy link
-					</Button>
-					<DrawerDismiss label={dismissLabel} />
-				</Flex>
+				{isMobileNav ? (
+					<Stack space="$space-3">
+						<DrawerHeading>{title}</DrawerHeading>
+						<Flex align="center" gap="$space-2">
+							{copyLinkAction}
+							<DrawerDismiss label={dismissLabel} />
+						</Flex>
+					</Stack>
+				) : (
+					<>
+						<DrawerHeading>{title}</DrawerHeading>
+						<Flex align="center" gap="$space-2">
+							{copyLinkAction}
+							<DrawerDismiss label={dismissLabel} />
+						</Flex>
+					</>
+				)}
 			</DrawerHeader>
 			<DrawerContent>
 				<Stack space="$space-4">

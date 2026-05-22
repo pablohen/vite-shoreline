@@ -5,6 +5,7 @@ import {
 	Pagination,
 } from '@vtex/shoreline'
 import type { ComponentProps, ReactNode } from 'react'
+import { useIsMobileNav } from '../hooks/use-media-query.ts'
 import { getCollectionViewStatus } from '../utils/collection-view-status.ts'
 import { TableAreaSkeleton } from './TableAreaSkeleton.tsx'
 
@@ -35,6 +36,7 @@ export function ResourceTabPanel<T>({
 	skeletonColumnCount = 4,
 	children,
 }: ResourceTabPanelProps<T>) {
+	const isMobileNav = useIsMobileNav()
 	const isEmptyPage = pagination.page > 1 && items.length === 0
 	const messages = listError
 		? {
@@ -56,9 +58,11 @@ export function ResourceTabPanel<T>({
 
 	return (
 		<Collection>
-			<CollectionRow justify="flex-end">
-				<Pagination {...pagination} />
-			</CollectionRow>
+			{!isMobileNav ? (
+				<CollectionRow justify="flex-end">
+					<Pagination {...pagination} />
+				</CollectionRow>
+			) : null}
 
 			<CollectionView
 				status={getCollectionViewStatus(
