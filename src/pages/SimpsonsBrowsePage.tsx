@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import type { UseQueryResult } from '@tanstack/react-query'
 import {
 	DrawerProvider,
 	Page,
@@ -11,7 +11,7 @@ import {
 	TabPanel,
 	TabProvider,
 } from '@vtex/shoreline'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CharacterDetailsDrawer } from '../components/CharacterDetailsDrawer.tsx'
 import { CharactersTabPanel } from '../components/CharactersTabPanel.tsx'
 import { EpisodeDetailsDrawer } from '../components/EpisodeDetailsDrawer.tsx'
@@ -19,75 +19,168 @@ import { EpisodesTabPanel } from '../components/EpisodesTabPanel.tsx'
 import { LocationDetailsDrawer } from '../components/LocationDetailsDrawer.tsx'
 import { LocationsTabPanel } from '../components/LocationsTabPanel.tsx'
 import {
-	type CharacterListItem,
-	type EpisodeListItem,
-	fetchCharactersPage,
-	fetchEpisodesPage,
-	fetchLocationsPage,
-	type LocationListItem,
-	SIMPSONS_PAGE_SIZE,
+	getListPagination,
+	useSimpsonsListQuery,
+} from '../hooks/use-simpsons-list-query.ts'
+import type {
+	CharacterListItem,
+	CharactersListResponse,
+	EpisodeListItem,
+	EpisodesListResponse,
+	LocationListItem,
+	LocationsListResponse,
 } from '../simpsons-api.ts'
-import { isSimpsonsTabId, type SimpsonsTabId } from '../simpsons-tabs.ts'
+import {
+	isSimpsonsTabId,
+	SIMPSONS_TAB_IDS,
+	type SimpsonsTabId,
+} from '../simpsons-tabs.ts'
 import { getErrorMessage } from '../utils/get-error-message.ts'
 
 export type SimpsonsBrowsePageProps = {
 	tab: SimpsonsTabId
 	page: number
+	detail: number | undefined
 	onTabChange: (tab: SimpsonsTabId) => void
 	onPageChange: (page: number) => void
+	onDetailChange: (detail: number | undefined) => void
 }
 
 type BrowseDrawerState =
 	| null
-	| { kind: 'episode'; id: number; preview: EpisodeListItem }
-	| { kind: 'character'; id: number; preview: CharacterListItem }
-	| { kind: 'location'; id: number; preview: LocationListItem }
+	| { kind: 'episode'; id: number; preview: EpisodeListItem | null }
+	| { kind: 'character'; id: number; preview: CharacterListItem | null }
+	| { kind: 'location'; id: number; preview: LocationListItem | null }
+
+const RESOURCE_CONFIG = {
+	episodes: {
+		label: 'Episodes',
+		errorLabel: 'Failed to load episodes',
+	},
+	characters: {
+		label: 'Characters',
+		errorLabel: 'Failed to load characters',
+	},
+	locations: {
+		label: 'Locations',
+		errorLabel: 'Failed to load locations',
+	},
+} as const
+
+function getTabPanelQueryState(
+	query: UseQueryResult<
+		EpisodesListResponse | CharactersListResponse | LocationsListResponse,
+		Error
+	>,
+	errorLabel: string,
+	page: number,
+	onPageChange: (page: number) => void,
+) {
+	return {
+		listError: getErrorMessage(query.isError, query.error, errorLabel),
+		isPending: query.isPending,
+		isFetching: query.isFetching,
+		isError: query.isError,
+		onRefetch: query.refetch,
+		pagination: getListPagination(
+			page,
+			query.data?.count,
+			query.isFetching,
+			onPageChange,
+		),
+	}
+}
 
 export function SimpsonsBrowsePage({
 	tab,
 	page,
+	detail,
 	onTabChange,
 	onPageChange,
+	onDetailChange,
 }: SimpsonsBrowsePageProps) {
-	const episodesQuery = useQuery({
-		queryKey: ['episodes', 'list', page] as const,
-		queryFn: () => fetchEpisodesPage(page),
-		enabled: tab === 'episodes',
-	})
-
-	const charactersQuery = useQuery({
-		queryKey: ['characters', 'list', page] as const,
-		queryFn: () => fetchCharactersPage(page),
-		enabled: tab === 'characters',
-	})
-
-	const locationsQuery = useQuery({
-		queryKey: ['locations', 'list', page] as const,
-		queryFn: () => fetchLocationsPage(page),
-		enabled: tab === 'locations',
-	})
+	const episodesQuery = useSimpsonsListQuery(
+		'episodes',
+		page,
+		tab === 'episodes',
+	)
+	const charactersQuery = useSimpsonsListQuery(
+		'characters',
+		page,
+		tab === 'characters',
+	)
+	const locationsQuery = useSimpsonsListQuery(
+		'locations',
+		page,
+		tab === 'locations',
+	)
 
 	const [drawer, setDrawer] = useState<BrowseDrawerState>(null)
 
-	const drawerOpen = drawer !== null
+	const listResults = useMemo(
+		() => ({
+			episodes: episodesQuery.data?.results ?? [],
+			characters: charactersQuery.data?.results ?? [],
+			locations: locationsQuery.data?.results ?? [],
+		}),
+		[
+			episodesQuery.data?.results,
+			charactersQuery.data?.results,
+			locationsQuery.data?.results,
+		],
+	)
 
-	function handleTabChange(tab: SimpsonsTabId) {
-		if (isSimpsonsTabId(tab)) {
-			onTabChange(tab)
+	useEffect(() => {
+		if (detail == null) {
+			setDrawer(null)
+			return
+		}
+
+		switch (tab) {
+			case 'episodes':
+				setDrawer({
+					kind: 'episode',
+					id: detail,
+					preview:
+						listResults.episodes.find((item) => item.id === detail) ?? null,
+				})
+				break
+			case 'characters':
+				setDrawer({
+					kind: 'character',
+					id: detail,
+					preview:
+						listResults.characters.find((item) => item.id === detail) ?? null,
+				})
+				break
+			case 'locations':
+				setDrawer({
+					kind: 'location',
+					id: detail,
+					preview:
+						listResults.locations.find((item) => item.id === detail) ?? null,
+				})
+				break
+		}
+	}, [detail, tab, listResults])
+
+	function handleTabChange(selectedId: string | null | undefined) {
+		if (isSimpsonsTabId(selectedId)) {
+			onTabChange(selectedId)
 		}
 	}
 
 	function handleDrawerOpenChange(open: boolean) {
 		if (!open) {
-			setDrawer(null)
+			onDetailChange(undefined)
 		}
 	}
 
-	// Close drawer when the route tab changes (e.g. URL / back-forward).
-	// biome-ignore lint/correctness/useExhaustiveDependencies: tab is the intentional trigger
-	useEffect(() => {
-		setDrawer(null)
-	}, [tab])
+	function handleItemSelect(
+		item: EpisodeListItem | CharacterListItem | LocationListItem,
+	) {
+		onDetailChange(item.id)
+	}
 
 	return (
 		<Page>
@@ -98,9 +191,11 @@ export function SimpsonsBrowsePage({
 					</PageHeaderRow>
 					<PageHeaderRow>
 						<TabList>
-							<Tab id="episodes">Episodes</Tab>
-							<Tab id="characters">Characters</Tab>
-							<Tab id="locations">Locations</Tab>
+							{SIMPSONS_TAB_IDS.map((tabId) => (
+								<Tab key={tabId} id={tabId}>
+									{RESOURCE_CONFIG[tabId].label}
+								</Tab>
+							))}
 						</TabList>
 					</PageHeaderRow>
 				</PageHeader>
@@ -109,93 +204,48 @@ export function SimpsonsBrowsePage({
 					<TabPanel tabId="episodes">
 						<EpisodesTabPanel
 							episodes={episodesQuery.data?.results ?? []}
-							isPending={episodesQuery.isPending}
-							isFetching={episodesQuery.isFetching}
-							isError={episodesQuery.isError}
-							onRefetch={episodesQuery.refetch}
-							onEpisodeSelect={(episode: EpisodeListItem) => {
-								setDrawer({
-									kind: 'episode',
-									id: episode.id,
-									preview: episode,
-								})
-							}}
-							listError={getErrorMessage(
-								episodesQuery.isError,
-								episodesQuery.error,
-								'Failed to load episodes',
-							)}
-							pagination={{
+							onEpisodeSelect={handleItemSelect}
+							{...getTabPanelQueryState(
+								episodesQuery,
+								RESOURCE_CONFIG.episodes.errorLabel,
 								page,
-								total: episodesQuery.data?.count ?? 0,
-								size: SIMPSONS_PAGE_SIZE,
-								loading: episodesQuery.isFetching,
 								onPageChange,
-							}}
+							)}
 						/>
 					</TabPanel>
 
 					<TabPanel tabId="characters">
 						<CharactersTabPanel
 							characters={charactersQuery.data?.results ?? []}
-							isPending={charactersQuery.isPending}
-							isFetching={charactersQuery.isFetching}
-							isError={charactersQuery.isError}
-							onRefetch={charactersQuery.refetch}
-							onCharacterSelect={(character: CharacterListItem) => {
-								setDrawer({
-									kind: 'character',
-									id: character.id,
-									preview: character,
-								})
-							}}
-							listError={getErrorMessage(
-								charactersQuery.isError,
-								charactersQuery.error,
-								'Failed to load characters',
-							)}
-							pagination={{
+							onCharacterSelect={handleItemSelect}
+							{...getTabPanelQueryState(
+								charactersQuery,
+								RESOURCE_CONFIG.characters.errorLabel,
 								page,
-								total: charactersQuery.data?.count ?? 0,
-								size: SIMPSONS_PAGE_SIZE,
-								loading: charactersQuery.isFetching,
 								onPageChange,
-							}}
+							)}
 						/>
 					</TabPanel>
 
 					<TabPanel tabId="locations">
 						<LocationsTabPanel
 							locations={locationsQuery.data?.results ?? []}
-							isPending={locationsQuery.isPending}
-							isFetching={locationsQuery.isFetching}
-							isError={locationsQuery.isError}
-							onRefetch={locationsQuery.refetch}
-							onLocationSelect={(location: LocationListItem) => {
-								setDrawer({
-									kind: 'location',
-									id: location.id,
-									preview: location,
-								})
-							}}
-							listError={getErrorMessage(
-								locationsQuery.isError,
-								locationsQuery.error,
-								'Failed to load locations',
-							)}
-							pagination={{
+							onLocationSelect={handleItemSelect}
+							{...getTabPanelQueryState(
+								locationsQuery,
+								RESOURCE_CONFIG.locations.errorLabel,
 								page,
-								total: locationsQuery.data?.count ?? 0,
-								size: SIMPSONS_PAGE_SIZE,
-								loading: locationsQuery.isFetching,
 								onPageChange,
-							}}
+							)}
 						/>
 					</TabPanel>
 				</PageContent>
 			</TabProvider>
 
-			<DrawerProvider open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+			<DrawerProvider
+				open={drawer !== null}
+				onOpenChange={handleDrawerOpenChange}
+			>
 				{drawer?.kind === 'episode' && (
 					<EpisodeDetailsDrawer
 						episodeId={drawer.id}

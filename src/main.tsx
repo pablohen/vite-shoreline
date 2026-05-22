@@ -5,7 +5,13 @@ import { createRoot } from 'react-dom/client'
 import '@vtex/shoreline/css'
 import { routeTree } from './routeTree.gen'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 5 * 60 * 1000,
+		},
+	},
+})
 const router = createRouter({ routeTree })
 
 declare module '@tanstack/react-router' {

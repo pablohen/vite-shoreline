@@ -1,8 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Tag, Text } from '@vtex/shoreline'
-import { TsTable } from '@vtex/shoreline-ts-table'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { formatAirdate } from '../utils/format-airdate.ts'
+import { SelectableTable } from './SelectableTable.tsx'
 
 const episodeTableColumns: ColumnDef<EpisodeListItem>[] = [
 	{
@@ -38,20 +38,11 @@ export function EpisodesTable({
 	onEpisodeSelect,
 }: EpisodesTableProps) {
 	return (
-		<TsTable<EpisodeListItem>
+		<SelectableTable
 			data={episodes}
 			columns={episodeTableColumns}
 			columnWidths={['auto', 'auto', 'minmax(12rem, 1fr)', 'auto']}
-			stickyHeader
-			options={{
-				getRowId: (row) => String(row.id),
-			}}
-			rowClick={{
-				type: 'action',
-				onClick: (row) => {
-					onEpisodeSelect(row.original)
-				},
-			}}
+			onRowSelect={onEpisodeSelect}
 		/>
 	)
 }

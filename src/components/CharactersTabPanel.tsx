@@ -1,16 +1,10 @@
-import {
-	Collection,
-	CollectionRow,
-	CollectionView,
-	Pagination,
-} from '@vtex/shoreline'
 import type { ComponentProps } from 'react'
 import type { CharacterListItem } from '../simpsons-api.ts'
-import { getCollectionViewStatus } from '../utils/collection-view-status.ts'
 import { CharactersTable } from './CharactersTable.tsx'
+import { ResourceTabPanel } from './ResourceTabPanel.tsx'
 
 export type CharactersTabPanelProps = {
-	pagination: ComponentProps<typeof Pagination>
+	pagination: ComponentProps<typeof ResourceTabPanel>['pagination']
 	characters: CharacterListItem[]
 	listError: string | null
 	isPending: boolean
@@ -21,52 +15,23 @@ export type CharactersTabPanelProps = {
 }
 
 export function CharactersTabPanel({
-	pagination,
 	characters,
-	listError,
-	isPending,
-	isFetching,
-	isError,
-	onRefetch,
 	onCharacterSelect,
+	...queryState
 }: CharactersTabPanelProps) {
 	return (
-		<Collection>
-			<CollectionRow justify="flex-end">
-				<Pagination {...pagination} />
-			</CollectionRow>
-
-			<CollectionView
-				status={getCollectionViewStatus(
-					listError,
-					isPending,
-					isFetching,
-					characters.length,
-				)}
-				messages={
-					listError
-						? {
-								'error-heading': listError,
-								'error-action': 'Try again',
-							}
-						: !isPending && !isError && characters.length === 0
-							? {
-									'empty-heading': 'No characters',
-									'empty-description': 'There are no characters to show.',
-								}
-							: undefined
-				}
-				onError={onRefetch}
-			>
+		<ResourceTabPanel
+			items={characters}
+			emptyHeading="No characters"
+			emptyDescription="There are no characters to show."
+			{...queryState}
+		>
+			{(items) => (
 				<CharactersTable
-					characters={characters}
+					characters={items}
 					onCharacterSelect={onCharacterSelect}
 				/>
-			</CollectionView>
-
-			<CollectionRow align="flex-end">
-				<Pagination {...pagination} />
-			</CollectionRow>
-		</Collection>
+			)}
+		</ResourceTabPanel>
 	)
 }

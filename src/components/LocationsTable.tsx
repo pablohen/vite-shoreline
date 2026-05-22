@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Tag, Text } from '@vtex/shoreline'
-import { TsTable } from '@vtex/shoreline-ts-table'
 import type { LocationListItem } from '../simpsons-api.ts'
+import { SelectableTable } from './SelectableTable.tsx'
 
 const locationTableColumns: ColumnDef<LocationListItem>[] = [
 	{
@@ -32,20 +32,11 @@ export function LocationsTable({
 	onLocationSelect,
 }: LocationsTableProps) {
 	return (
-		<TsTable<LocationListItem>
+		<SelectableTable
 			data={locations}
 			columns={locationTableColumns}
 			columnWidths={['minmax(12rem, 1.5fr)', 'auto', 'minmax(10rem, 1fr)']}
-			stickyHeader
-			options={{
-				getRowId: (row) => String(row.id),
-			}}
-			rowClick={{
-				type: 'action',
-				onClick: (row) => {
-					onLocationSelect(row.original)
-				},
-			}}
+			onRowSelect={onLocationSelect}
 		/>
 	)
 }

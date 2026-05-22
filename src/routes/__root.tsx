@@ -13,6 +13,7 @@ const defaultSearchValues = {
 const searchSchema = z.object({
 	page: z.coerce.number().int().min(1).default(1).catch(1),
 	tab: simpsonsTabSchema,
+	detail: z.coerce.number().int().positive().optional().catch(undefined),
 })
 
 type AppSearch = z.infer<typeof searchSchema>
@@ -26,7 +27,7 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
-	const { page, tab } = Route.useSearch()
+	const { page, tab, detail } = Route.useSearch()
 	const navigate = Route.useNavigate() as (opts: {
 		to: '.'
 		search: AppSearch | ((prev: AppSearch) => AppSearch)
@@ -37,10 +38,16 @@ function RootLayout() {
 			<SimpsonsBrowsePage
 				tab={tab}
 				page={page}
+				detail={detail}
 				onTabChange={(nextTab) => {
 					void navigate({
 						to: '.',
-						search: (prev) => ({ ...prev, tab: nextTab, page: 1 }),
+						search: (prev) => ({
+							...prev,
+							tab: nextTab,
+							page: 1,
+							detail: undefined,
+						}),
 					})
 				}}
 				onPageChange={(nextPage) => {
@@ -49,11 +56,19 @@ function RootLayout() {
 						search: (prev) => ({ ...prev, page: nextPage }),
 					})
 				}}
+				onDetailChange={(nextDetail) => {
+					void navigate({
+						to: '.',
+						search: (prev) => ({ ...prev, detail: nextDetail }),
+					})
+				}}
 			/>
 			{import.meta.env.DEV ? (
-				<ReactQueryDevtools initialIsOpen={false} />
+				<>
+					<ReactQueryDevtools initialIsOpen={false} />
+					<TanStackRouterDevtools />
+				</>
 			) : null}
-			<TanStackRouterDevtools />
 		</>
 	)
 }

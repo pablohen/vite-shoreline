@@ -1,19 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Tag, Text } from '@vtex/shoreline'
-import { TsTable } from '@vtex/shoreline-ts-table'
-import type { ComponentProps } from 'react'
 import type { CharacterListItem } from '../simpsons-api.ts'
-
-function statusColor(status: string): ComponentProps<typeof Tag>['color'] {
-	const normalized = status.toLowerCase()
-	if (normalized === 'alive') {
-		return 'green'
-	}
-	if (normalized === 'deceased') {
-		return 'red'
-	}
-	return 'gray'
-}
+import { characterStatusColor } from '../utils/character-status-color.ts'
+import { SelectableTable } from './SelectableTable.tsx'
 
 const characterTableColumns: ColumnDef<CharacterListItem>[] = [
 	{
@@ -38,7 +27,7 @@ const characterTableColumns: ColumnDef<CharacterListItem>[] = [
 		cell: ({ getValue }) => {
 			const status = getValue<string>()
 			return (
-				<Tag variant="secondary" color={statusColor(status)}>
+				<Tag variant="secondary" color={characterStatusColor(status)}>
 					{status}
 				</Tag>
 			)
@@ -56,7 +45,7 @@ export function CharactersTable({
 	onCharacterSelect,
 }: CharactersTableProps) {
 	return (
-		<TsTable<CharacterListItem>
+		<SelectableTable
 			data={characters}
 			columns={characterTableColumns}
 			columnWidths={[
@@ -65,16 +54,7 @@ export function CharactersTable({
 				'auto',
 				'auto',
 			]}
-			stickyHeader
-			options={{
-				getRowId: (row) => String(row.id),
-			}}
-			rowClick={{
-				type: 'action',
-				onClick: (row) => {
-					onCharacterSelect(row.original)
-				},
-			}}
+			onRowSelect={onCharacterSelect}
 		/>
 	)
 }
