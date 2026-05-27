@@ -1,4 +1,4 @@
-import { Button, Heading, Stack, Tag, Text } from '@vtex/shoreline'
+import { Heading, Stack, Tag, Text } from '@vtex/shoreline'
 import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
 import type { CharacterListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
@@ -7,6 +7,8 @@ import { formatAirdate } from '../utils/format-airdate.ts'
 import { getErrorMessage } from '../utils/get-error-message.ts'
 import { DetailImage } from './DetailImage.tsx'
 import { DetailsDrawerShell } from './DetailsDrawerShell.tsx'
+import { LinkedEpisodeAppearance } from './LinkedEpisodeAppearance.tsx'
+import { ShortAppearanceBlock } from './ShortAppearanceBlock.tsx'
 
 export type CharacterDetailsDrawerProps = {
 	characterId: number | null
@@ -28,7 +30,6 @@ export function CharacterDetailsDrawer({
 	const title = preview?.name ?? display?.name ?? 'Character'
 	const descriptionText = data?.description?.trim()
 	const phrases = data?.phrases ?? []
-	const firstAppearance = data?.first_appearance_ep
 	const errorMessage = getErrorMessage(
 		isError,
 		error,
@@ -81,25 +82,12 @@ export function CharacterDetailsDrawer({
 						</Text>
 					</Stack>
 
-					{Boolean(firstAppearance?.name) && (
-						<Stack space="$space-1">
-							<Heading level={5} variant="display3">
-								First appearance
-							</Heading>
-							{firstAppearance?.id != null ? (
-								<Button
-									variant="tertiary"
-									onClick={() => onNavigateToEpisode(firstAppearance.id)}
-								>
-									{firstAppearance.name}
-								</Button>
-							) : (
-								<Text as="p" variant="body">
-									{firstAppearance?.name}
-								</Text>
-							)}
-						</Stack>
-					)}
+					<LinkedEpisodeAppearance
+						appearance={data?.first_appearance_ep}
+						onNavigate={onNavigateToEpisode}
+					/>
+
+					<ShortAppearanceBlock appearance={data?.first_appearance_sh} />
 
 					{phrases.length > 0 && (
 						<Stack space="$space-1">

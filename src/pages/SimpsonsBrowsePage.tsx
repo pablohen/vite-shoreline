@@ -310,6 +310,9 @@ export function SimpsonsBrowsePage({
 					<LocationDetailsDrawer
 						locationId={drawer.id}
 						preview={drawer.preview}
+						onNavigateToEpisode={(episodeId) => {
+							onNavigateToResourceDetail('episodes', episodeId)
+						}}
 					/>
 				)}
 			</DrawerProvider>

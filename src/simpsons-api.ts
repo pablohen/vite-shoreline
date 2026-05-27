@@ -35,6 +35,17 @@ const episodeDetailSchema = episodeListItemSchema.extend({
 	description: z.string().optional(),
 })
 
+const appearanceRefSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	airdate: z.string(),
+	season: z.number(),
+	episode_number: z.number(),
+	synopsis: z.string(),
+	image_path: z.string(),
+	description: z.string().optional(),
+})
+
 const characterListItemSchema = z.object({
 	id: z.number(),
 	name: z.string(),
@@ -49,13 +60,8 @@ const characterDetailSchema = characterListItemSchema.extend({
 	age: z.number().optional(),
 	birthdate: z.string().nullable().optional(),
 	phrases: z.array(z.string()).optional(),
-	first_appearance_ep: z
-		.object({
-			id: z.number(),
-			name: z.string(),
-		})
-		.nullable()
-		.optional(),
+	first_appearance_ep: appearanceRefSchema.nullable().optional(),
+	first_appearance_sh: appearanceRefSchema.nullable().optional(),
 })
 
 const locationListItemSchema = z.object({
@@ -68,7 +74,11 @@ const locationListItemSchema = z.object({
 
 const locationDetailSchema = locationListItemSchema.extend({
 	description: z.string().optional(),
+	first_appearance_ep: appearanceRefSchema.nullable().optional(),
+	first_appearance_sh: appearanceRefSchema.nullable().optional(),
 })
+
+export type AppearanceRef = z.infer<typeof appearanceRefSchema>
 
 export type EpisodeListItem = z.infer<typeof episodeListItemSchema>
 export type EpisodeDetail = z.infer<typeof episodeDetailSchema>
