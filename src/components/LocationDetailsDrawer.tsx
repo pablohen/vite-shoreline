@@ -1,9 +1,9 @@
-import { Heading, Stack, Tag, Text } from '@vtex/shoreline'
-import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
+import { Stack, Tag, Text } from '@vtex/shoreline'
+import { useDetailDrawerContent } from '../hooks/use-detail-drawer-content.ts'
 import type { LocationListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
-import { getErrorMessage } from '../utils/get-error-message.ts'
 import { DetailImage } from './DetailImage.tsx'
+import { DetailSection } from './DetailSection.tsx'
 import { DetailsDrawerShell } from './DetailsDrawerShell.tsx'
 import { LinkedEpisodeAppearance } from './LinkedEpisodeAppearance.tsx'
 import { ShortAppearanceBlock } from './ShortAppearanceBlock.tsx'
@@ -19,17 +19,19 @@ export function LocationDetailsDrawer({
 	preview,
 	onNavigateToEpisode,
 }: LocationDetailsDrawerProps) {
-	const { data, isPending, isError, error } = useSimpsonsDetailQuery(
+	const {
+		data,
+		display,
+		title,
+		descriptionText,
+		errorMessage,
+		isPending,
+		hasContent,
+	} = useDetailDrawerContent(
 		'locations',
 		locationId,
-	)
-
-	const display = data ?? preview
-	const title = preview?.name ?? display?.name ?? 'Location'
-	const descriptionText = data?.description?.trim()
-	const errorMessage = getErrorMessage(
-		isError,
-		error,
+		preview,
+		'Location',
 		'Failed to load location details',
 	)
 
@@ -39,7 +41,7 @@ export function LocationDetailsDrawer({
 			dismissLabel="Close location details"
 			errorMessage={errorMessage}
 			isPending={isPending}
-			hasContent={Boolean(display)}
+			hasContent={hasContent}
 		>
 			<Stack space="$space-2">
 				<Stack horizontal space="$space-2">
@@ -57,14 +59,11 @@ export function LocationDetailsDrawer({
 					height={360}
 				/>
 				<Stack space="$space-2">
-					<Stack space="$space-1">
-						<Heading level={5} variant="display3">
-							Description
-						</Heading>
+					<DetailSection heading="Description">
 						<Text as="p" variant="body">
 							{descriptionText || '—'}
 						</Text>
-					</Stack>
+					</DetailSection>
 
 					<LinkedEpisodeAppearance
 						appearance={data?.first_appearance_ep}

@@ -7,19 +7,7 @@ import {
 	type SimpsonsResource,
 } from '../simpsons-api.ts'
 
-export function useSimpsonsDetailQuery(
-	resource: 'episodes',
-	id: number | null,
-): UseQueryResult<EpisodeDetail>
-export function useSimpsonsDetailQuery(
-	resource: 'characters',
-	id: number | null,
-): UseQueryResult<CharacterDetail>
-export function useSimpsonsDetailQuery(
-	resource: 'locations',
-	id: number | null,
-): UseQueryResult<LocationDetail>
-export function useSimpsonsDetailQuery(
+function useSimpsonsDetailQueryImpl(
 	resource: SimpsonsResource,
 	id: number | null,
 ): UseQueryResult<EpisodeDetail | CharacterDetail | LocationDetail> {
@@ -47,3 +35,24 @@ export function useSimpsonsDetailQuery(
 		enabled: id != null,
 	})
 }
+
+export function useSimpsonsDetailQuery(
+	resource: 'episodes',
+	id: number | null,
+): UseQueryResult<EpisodeDetail>
+export function useSimpsonsDetailQuery(
+	resource: 'characters',
+	id: number | null,
+): UseQueryResult<CharacterDetail>
+export function useSimpsonsDetailQuery(
+	resource: 'locations',
+	id: number | null,
+): UseQueryResult<LocationDetail>
+export function useSimpsonsDetailQuery(
+	resource: SimpsonsResource,
+	id: number | null,
+): UseQueryResult<EpisodeDetail | CharacterDetail | LocationDetail> {
+	return useSimpsonsDetailQueryImpl(resource, id)
+}
+
+export { useSimpsonsDetailQueryImpl }

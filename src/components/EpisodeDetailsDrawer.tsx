@@ -1,13 +1,12 @@
-import { Flex, Heading, Stack, Tag, Text, Tooltip } from '@vtex/shoreline'
-import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
+import { Flex, Stack, Tag, Text } from '@vtex/shoreline'
+import { useDetailDrawerContent } from '../hooks/use-detail-drawer-content.ts'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
 import { formatAirdate } from '../utils/format-airdate.ts'
-import { getErrorMessage } from '../utils/get-error-message.ts'
+import { ClampedSynopsis } from './ClampedSynopsis.tsx'
 import { DetailImage } from './DetailImage.tsx'
+import { DetailSection } from './DetailSection.tsx'
 import { DetailsDrawerShell } from './DetailsDrawerShell.tsx'
-
-const SYNOPSIS_TOOLTIP_THRESHOLD = 120
 
 export type EpisodeDetailsDrawerProps = {
 	episodeId: number | null
@@ -18,41 +17,19 @@ export function EpisodeDetailsDrawer({
 	episodeId,
 	preview,
 }: EpisodeDetailsDrawerProps) {
-	const { data, isPending, isError, error } = useSimpsonsDetailQuery(
+	const {
+		display: displayEpisode,
+		title,
+		descriptionText,
+		errorMessage,
+		isPending,
+		hasContent,
+	} = useDetailDrawerContent(
 		'episodes',
 		episodeId,
-	)
-
-	const displayEpisode = data ?? preview
-	const title = preview?.name ?? displayEpisode?.name ?? 'Episode'
-	const descriptionText = data?.description?.trim()
-	const synopsisText = displayEpisode?.synopsis?.trim()
-	const showSynopsisTooltip = Boolean(
-		synopsisText && synopsisText.length > SYNOPSIS_TOOLTIP_THRESHOLD,
-	)
-	const errorMessage = getErrorMessage(
-		isError,
-		error,
+		preview,
+		'Episode',
 		'Failed to load episode details',
-	)
-
-	const synopsis = (
-		<Text
-			as="p"
-			variant="body"
-			style={
-				showSynopsisTooltip
-					? {
-							display: '-webkit-box',
-							WebkitLineClamp: 3,
-							WebkitBoxOrient: 'vertical',
-							overflow: 'hidden',
-						}
-					: undefined
-			}
-		>
-			{synopsisText || '—'}
-		</Text>
 	)
 
 	return (
@@ -61,7 +38,7 @@ export function EpisodeDetailsDrawer({
 			dismissLabel="Close episode details"
 			errorMessage={errorMessage}
 			isPending={isPending}
-			hasContent={Boolean(displayEpisode)}
+			hasContent={hasContent}
 		>
 			<Stack space="$space-2">
 				<Flex align="center" gap="$space-2" style={{ flexWrap: 'wrap' }}>
@@ -80,25 +57,15 @@ export function EpisodeDetailsDrawer({
 					height={360}
 				/>
 				<Stack space="$space-2">
-					<Stack space="$space-1">
-						<Heading level={5} variant="display3">
-							Description
-						</Heading>
+					<DetailSection heading="Description">
 						<Text as="p" variant="body">
 							{descriptionText || '—'}
 						</Text>
-					</Stack>
+					</DetailSection>
 
-					<Stack space="$space-1">
-						<Heading level={5} variant="display3">
-							Synopsis
-						</Heading>
-						{showSynopsisTooltip ? (
-							<Tooltip label={synopsisText}>{synopsis}</Tooltip>
-						) : (
-							synopsis
-						)}
-					</Stack>
+					<DetailSection heading="Synopsis">
+						<ClampedSynopsis text={displayEpisode?.synopsis} />
+					</DetailSection>
 				</Stack>
 			</Stack>
 		</DetailsDrawerShell>

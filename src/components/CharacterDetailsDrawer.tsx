@@ -1,11 +1,11 @@
-import { Heading, Stack, Tag, Text } from '@vtex/shoreline'
-import { useSimpsonsDetailQuery } from '../hooks/use-simpsons-detail-query.ts'
+import { Stack, Tag, Text } from '@vtex/shoreline'
+import { useDetailDrawerContent } from '../hooks/use-detail-drawer-content.ts'
 import type { CharacterListItem } from '../simpsons-api.ts'
 import { simpsonsImageUrl } from '../simpsons-api.ts'
 import { characterStatusColor } from '../utils/character-status-color.ts'
 import { formatAirdate } from '../utils/format-airdate.ts'
-import { getErrorMessage } from '../utils/get-error-message.ts'
 import { DetailImage } from './DetailImage.tsx'
+import { DetailSection } from './DetailSection.tsx'
 import { DetailsDrawerShell } from './DetailsDrawerShell.tsx'
 import { LinkedEpisodeAppearance } from './LinkedEpisodeAppearance.tsx'
 import { ShortAppearanceBlock } from './ShortAppearanceBlock.tsx'
@@ -21,20 +21,23 @@ export function CharacterDetailsDrawer({
 	preview,
 	onNavigateToEpisode,
 }: CharacterDetailsDrawerProps) {
-	const { data, isPending, isError, error } = useSimpsonsDetailQuery(
+	const {
+		data,
+		display,
+		title,
+		descriptionText,
+		errorMessage,
+		isPending,
+		hasContent,
+	} = useDetailDrawerContent(
 		'characters',
 		characterId,
-	)
-
-	const display = data ?? preview
-	const title = preview?.name ?? display?.name ?? 'Character'
-	const descriptionText = data?.description?.trim()
-	const phrases = data?.phrases ?? []
-	const errorMessage = getErrorMessage(
-		isError,
-		error,
+		preview,
+		'Character',
 		'Failed to load character details',
 	)
+
+	const phrases = data?.phrases ?? []
 
 	return (
 		<DetailsDrawerShell
@@ -42,7 +45,7 @@ export function CharacterDetailsDrawer({
 			dismissLabel="Close character details"
 			errorMessage={errorMessage}
 			isPending={isPending}
-			hasContent={Boolean(display)}
+			hasContent={hasContent}
 		>
 			<Stack space="$space-2">
 				<Stack horizontal space="$space-2">
@@ -73,14 +76,11 @@ export function CharacterDetailsDrawer({
 					height={400}
 				/>
 				<Stack space="$space-2">
-					<Stack space="$space-1">
-						<Heading level={5} variant="display3">
-							Description
-						</Heading>
+					<DetailSection heading="Description">
 						<Text as="p" variant="body">
 							{descriptionText || '—'}
 						</Text>
-					</Stack>
+					</DetailSection>
 
 					<LinkedEpisodeAppearance
 						appearance={data?.first_appearance_ep}
@@ -90,10 +90,7 @@ export function CharacterDetailsDrawer({
 					<ShortAppearanceBlock appearance={data?.first_appearance_sh} />
 
 					{phrases.length > 0 && (
-						<Stack space="$space-1">
-							<Heading level={5} variant="display3">
-								Phrases
-							</Heading>
+						<DetailSection heading="Phrases">
 							<ul
 								style={{
 									margin: 0,
@@ -111,7 +108,7 @@ export function CharacterDetailsDrawer({
 									</li>
 								))}
 							</ul>
-						</Stack>
+						</DetailSection>
 					)}
 				</Stack>
 			</Stack>
