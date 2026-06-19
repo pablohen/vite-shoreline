@@ -17,8 +17,8 @@
 		"@tanstack/react-table": "^8.21.3",
 		"@vtex/shoreline": "^1.12.3",
 		"@vtex/shoreline-ts-table": "^1.0.107",
-		"react": "^19.2.6",
-		"react-dom": "^19.2.6",
+		"react": "^19.2.7",
+		"react-dom": "^19.2.7",
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
