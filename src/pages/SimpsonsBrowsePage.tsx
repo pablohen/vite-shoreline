@@ -1,4 +1,3 @@
-import type { UseQueryResult } from '@tanstack/react-query'
 import {
 	DrawerProvider,
 	Page,
@@ -11,29 +10,22 @@ import {
 	TabPanel,
 	TabProvider,
 } from '@vtex/shoreline'
-import { useEffect, useMemo, useState } from 'react'
-import { CharacterDetailsDrawer } from '../components/CharacterDetailsDrawer.tsx'
-import { CharactersTabPanel } from '../components/CharactersTabPanel.tsx'
-import { EpisodeDetailsDrawer } from '../components/EpisodeDetailsDrawer.tsx'
-import { EpisodesTabPanel } from '../components/EpisodesTabPanel.tsx'
-import { LocationDetailsDrawer } from '../components/LocationDetailsDrawer.tsx'
-import { LocationsTabPanel } from '../components/LocationsTabPanel.tsx'
+import { BrowseDetailDrawer } from '../components/BrowseDetailDrawer.tsx'
+import { ResourceBrowseTabPanel } from '../components/ResourceBrowseTabPanel.tsx'
 import {
 	SimpsonsBottomNav,
 	simpsonsPanelId,
 } from '../components/SimpsonsBottomNav.tsx'
+import { useBrowseDrawerState } from '../hooks/use-browse-drawer-state.ts'
 import { useIsMobileNav } from '../hooks/use-media-query.ts'
 import {
-	getListPagination,
-	useSimpsonsListQuery,
-} from '../hooks/use-simpsons-list-query.ts'
+	getTabPanelQueryState,
+	useSimpsonsBrowseQueries,
+} from '../hooks/use-simpsons-browse-queries.ts'
 import type {
 	CharacterListItem,
-	CharactersListResponse,
 	EpisodeListItem,
-	EpisodesListResponse,
 	LocationListItem,
-	LocationsListResponse,
 } from '../simpsons-api.ts'
 import { SIMPSONS_RESOURCE_CONFIG } from '../simpsons-resources.ts'
 import {
@@ -41,7 +33,6 @@ import {
 	SIMPSONS_TAB_IDS,
 	type SimpsonsTabId,
 } from '../simpsons-tabs.ts'
-import { getErrorMessage } from '../utils/get-error-message.ts'
 
 export type SimpsonsBrowsePageProps = {
 	tab: SimpsonsTabId
@@ -51,36 +42,6 @@ export type SimpsonsBrowsePageProps = {
 	onPageChange: (page: number) => void
 	onDetailChange: (detail: number | undefined) => void
 	onNavigateToResourceDetail: (tab: SimpsonsTabId, detailId: number) => void
-}
-
-type BrowseDrawerState =
-	| null
-	| { kind: 'episode'; id: number; preview: EpisodeListItem | null }
-	| { kind: 'character'; id: number; preview: CharacterListItem | null }
-	| { kind: 'location'; id: number; preview: LocationListItem | null }
-
-function getTabPanelQueryState(
-	query: UseQueryResult<
-		EpisodesListResponse | CharactersListResponse | LocationsListResponse,
-		Error
-	>,
-	errorLabel: string,
-	page: number,
-	onPageChange: (page: number) => void,
-) {
-	return {
-		listError: getErrorMessage(query.isError, query.error, errorLabel),
-		isPending: query.isPending,
-		isFetching: query.isFetching,
-		isError: query.isError,
-		onRefetch: query.refetch,
-		pagination: getListPagination(
-			page,
-			query.data?.count,
-			query.isFetching,
-			onPageChange,
-		),
-	}
 }
 
 export function SimpsonsBrowsePage({
@@ -93,70 +54,8 @@ export function SimpsonsBrowsePage({
 	onNavigateToResourceDetail,
 }: SimpsonsBrowsePageProps) {
 	const isMobileNav = useIsMobileNav()
-	const episodesQuery = useSimpsonsListQuery(
-		'episodes',
-		page,
-		tab === 'episodes',
-	)
-	const charactersQuery = useSimpsonsListQuery(
-		'characters',
-		page,
-		tab === 'characters',
-	)
-	const locationsQuery = useSimpsonsListQuery(
-		'locations',
-		page,
-		tab === 'locations',
-	)
-
-	const [drawer, setDrawer] = useState<BrowseDrawerState>(null)
-
-	const listResults = useMemo(
-		() => ({
-			episodes: episodesQuery.data?.results ?? [],
-			characters: charactersQuery.data?.results ?? [],
-			locations: locationsQuery.data?.results ?? [],
-		}),
-		[
-			episodesQuery.data?.results,
-			charactersQuery.data?.results,
-			locationsQuery.data?.results,
-		],
-	)
-
-	useEffect(() => {
-		if (detail == null) {
-			setDrawer(null)
-			return
-		}
-
-		switch (tab) {
-			case 'episodes':
-				setDrawer({
-					kind: 'episode',
-					id: detail,
-					preview:
-						listResults.episodes.find((item) => item.id === detail) ?? null,
-				})
-				break
-			case 'characters':
-				setDrawer({
-					kind: 'character',
-					id: detail,
-					preview:
-						listResults.characters.find((item) => item.id === detail) ?? null,
-				})
-				break
-			case 'locations':
-				setDrawer({
-					kind: 'location',
-					id: detail,
-					preview:
-						listResults.locations.find((item) => item.id === detail) ?? null,
-				})
-				break
-		}
-	}, [detail, tab, listResults])
+	const { queries, listResults } = useSimpsonsBrowseQueries(tab, page)
+	const drawer = useBrowseDrawerState(detail, tab, listResults)
 
 	function handleTabChange(selectedId: string | null | undefined) {
 		if (isSimpsonsTabId(selectedId)) {
@@ -226,44 +125,21 @@ export function SimpsonsBrowsePage({
 							: undefined
 					}
 				>
-					<TabPanel id={simpsonsPanelId('episodes')} tabId="episodes">
-						<EpisodesTabPanel
-							episodes={episodesQuery.data?.results ?? []}
-							onEpisodeSelect={handleItemSelect}
-							{...getTabPanelQueryState(
-								episodesQuery,
-								SIMPSONS_RESOURCE_CONFIG.episodes.errorLabel,
-								page,
-								onPageChange,
-							)}
-						/>
-					</TabPanel>
-
-					<TabPanel id={simpsonsPanelId('characters')} tabId="characters">
-						<CharactersTabPanel
-							characters={charactersQuery.data?.results ?? []}
-							onCharacterSelect={handleItemSelect}
-							{...getTabPanelQueryState(
-								charactersQuery,
-								SIMPSONS_RESOURCE_CONFIG.characters.errorLabel,
-								page,
-								onPageChange,
-							)}
-						/>
-					</TabPanel>
-
-					<TabPanel id={simpsonsPanelId('locations')} tabId="locations">
-						<LocationsTabPanel
-							locations={locationsQuery.data?.results ?? []}
-							onLocationSelect={handleItemSelect}
-							{...getTabPanelQueryState(
-								locationsQuery,
-								SIMPSONS_RESOURCE_CONFIG.locations.errorLabel,
-								page,
-								onPageChange,
-							)}
-						/>
-					</TabPanel>
+					{SIMPSONS_TAB_IDS.map((tabId) => (
+						<TabPanel key={tabId} id={simpsonsPanelId(tabId)} tabId={tabId}>
+							<ResourceBrowseTabPanel
+								tabId={tabId}
+								items={listResults[tabId]}
+								onItemSelect={handleItemSelect}
+								{...getTabPanelQueryState(
+									queries[tabId],
+									SIMPSONS_RESOURCE_CONFIG[tabId].errorLabel,
+									page,
+									onPageChange,
+								)}
+							/>
+						</TabPanel>
+					))}
 				</PageContent>
 
 				{isMobileNav ? (
@@ -275,32 +151,12 @@ export function SimpsonsBrowsePage({
 				open={drawer !== null}
 				onOpenChange={handleDrawerOpenChange}
 			>
-				{drawer?.kind === 'episode' && (
-					<EpisodeDetailsDrawer
-						episodeId={drawer.id}
-						preview={drawer.preview}
-					/>
-				)}
-
-				{drawer?.kind === 'character' && (
-					<CharacterDetailsDrawer
-						characterId={drawer.id}
-						preview={drawer.preview}
-						onNavigateToEpisode={(episodeId) => {
-							onNavigateToResourceDetail('episodes', episodeId)
-						}}
-					/>
-				)}
-
-				{drawer?.kind === 'location' && (
-					<LocationDetailsDrawer
-						locationId={drawer.id}
-						preview={drawer.preview}
-						onNavigateToEpisode={(episodeId) => {
-							onNavigateToResourceDetail('episodes', episodeId)
-						}}
-					/>
-				)}
+				<BrowseDetailDrawer
+					drawer={drawer}
+					onNavigateToEpisode={(episodeId) => {
+						onNavigateToResourceDetail('episodes', episodeId)
+					}}
+				/>
 			</DrawerProvider>
 		</TabProvider>
 	)
