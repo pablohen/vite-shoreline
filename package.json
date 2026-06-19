@@ -22,7 +22,7 @@
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
+		"@biomejs/biome": "^2.5.0",
 		"@tanstack/react-query-devtools": "^5.101.0",
 		"@tanstack/react-router-devtools": "^1.167.0",
 		"@tanstack/router-plugin": "^1.168.18",
