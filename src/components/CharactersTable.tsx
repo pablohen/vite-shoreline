@@ -1,7 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Tag, Text } from '@vtex/shoreline'
+import { Tag } from '@vtex/shoreline'
 import type { CharacterListItem } from '../simpsons-api.ts'
 import { characterStatusColor } from '../utils/character-status-color.ts'
+import { blueTag, textOrDash } from '../utils/table-cells.tsx'
 import { SelectableTable } from './SelectableTable.tsx'
 
 const characterTableColumns: ColumnDef<CharacterListItem>[] = [
@@ -12,14 +13,12 @@ const characterTableColumns: ColumnDef<CharacterListItem>[] = [
 	{
 		accessorKey: 'occupation',
 		header: 'Occupation',
-		cell: ({ getValue }) => (
-			<Text variant="body">{getValue<string>() || '—'}</Text>
-		),
+		cell: ({ getValue }) => textOrDash(getValue<string>()),
 	},
 	{
 		accessorKey: 'gender',
 		header: 'Gender',
-		cell: ({ getValue }) => <Tag color="blue">{getValue<string>()}</Tag>,
+		cell: ({ getValue }) => blueTag(getValue<string>()),
 	},
 	{
 		accessorKey: 'status',

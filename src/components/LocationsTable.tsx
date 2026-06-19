@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Tag, Text } from '@vtex/shoreline'
 import type { LocationListItem } from '../simpsons-api.ts'
+import { blueTag, textOrDash } from '../utils/table-cells.tsx'
 import { SelectableTable } from './SelectableTable.tsx'
 
 const locationTableColumns: ColumnDef<LocationListItem>[] = [
@@ -11,14 +11,12 @@ const locationTableColumns: ColumnDef<LocationListItem>[] = [
 	{
 		accessorKey: 'town',
 		header: 'Town',
-		cell: ({ getValue }) => <Tag color="blue">{getValue<string>()}</Tag>,
+		cell: ({ getValue }) => blueTag(getValue<string>()),
 	},
 	{
 		accessorKey: 'use',
 		header: 'Use',
-		cell: ({ getValue }) => (
-			<Text variant="body">{getValue<string>() || '—'}</Text>
-		),
+		cell: ({ getValue }) => textOrDash(getValue<string>()),
 	},
 ]
 

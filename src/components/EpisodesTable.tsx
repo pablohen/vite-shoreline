@@ -2,13 +2,14 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Tag, Text } from '@vtex/shoreline'
 import type { EpisodeListItem } from '../simpsons-api.ts'
 import { formatAirdate } from '../utils/format-airdate.ts'
+import { blueTag } from '../utils/table-cells.tsx'
 import { SelectableTable } from './SelectableTable.tsx'
 
 const episodeTableColumns: ColumnDef<EpisodeListItem>[] = [
 	{
 		accessorKey: 'season',
 		header: 'Season',
-		cell: ({ getValue }) => <Tag color="blue">S{getValue<number>()}</Tag>,
+		cell: ({ getValue }) => blueTag(`S${getValue<number>()}`),
 	},
 	{
 		accessorKey: 'episode_number',
