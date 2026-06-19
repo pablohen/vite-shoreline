@@ -14,7 +14,7 @@ export type PaginatedResponse<T> = {
 	results: T[]
 }
 
-const paginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+const paginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
 	z.object({
 		count: z.number(),
 		pages: z.number(),
