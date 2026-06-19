@@ -35,6 +35,7 @@ import type {
 	LocationListItem,
 	LocationsListResponse,
 } from '../simpsons-api.ts'
+import { SIMPSONS_RESOURCE_CONFIG } from '../simpsons-resources.ts'
 import {
 	isSimpsonsTabId,
 	SIMPSONS_TAB_IDS,
@@ -57,21 +58,6 @@ type BrowseDrawerState =
 	| { kind: 'episode'; id: number; preview: EpisodeListItem | null }
 	| { kind: 'character'; id: number; preview: CharacterListItem | null }
 	| { kind: 'location'; id: number; preview: LocationListItem | null }
-
-const RESOURCE_CONFIG = {
-	episodes: {
-		label: 'Episodes',
-		errorLabel: 'Failed to load episodes',
-	},
-	characters: {
-		label: 'Characters',
-		errorLabel: 'Failed to load characters',
-	},
-	locations: {
-		label: 'Locations',
-		errorLabel: 'Failed to load locations',
-	},
-} as const
 
 function getTabPanelQueryState(
 	query: UseQueryResult<
@@ -222,7 +208,7 @@ export function SimpsonsBrowsePage({
 						<TabList>
 							{SIMPSONS_TAB_IDS.map((tabId) => (
 								<Tab key={tabId} id={tabId}>
-									{RESOURCE_CONFIG[tabId].label}
+									{SIMPSONS_RESOURCE_CONFIG[tabId].label}
 								</Tab>
 							))}
 						</TabList>
@@ -246,7 +232,7 @@ export function SimpsonsBrowsePage({
 							onEpisodeSelect={handleItemSelect}
 							{...getTabPanelQueryState(
 								episodesQuery,
-								RESOURCE_CONFIG.episodes.errorLabel,
+								SIMPSONS_RESOURCE_CONFIG.episodes.errorLabel,
 								page,
 								onPageChange,
 							)}
@@ -259,7 +245,7 @@ export function SimpsonsBrowsePage({
 							onCharacterSelect={handleItemSelect}
 							{...getTabPanelQueryState(
 								charactersQuery,
-								RESOURCE_CONFIG.characters.errorLabel,
+								SIMPSONS_RESOURCE_CONFIG.characters.errorLabel,
 								page,
 								onPageChange,
 							)}
@@ -272,7 +258,7 @@ export function SimpsonsBrowsePage({
 							onLocationSelect={handleItemSelect}
 							{...getTabPanelQueryState(
 								locationsQuery,
-								RESOURCE_CONFIG.locations.errorLabel,
+								SIMPSONS_RESOURCE_CONFIG.locations.errorLabel,
 								page,
 								onPageChange,
 							)}

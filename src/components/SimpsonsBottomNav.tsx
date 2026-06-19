@@ -1,14 +1,12 @@
 import { IconMapPin, IconPlayCircle, IconUser, Text } from '@vtex/shoreline'
 import type { ComponentType } from 'react'
+import { SIMPSONS_RESOURCE_CONFIG } from '../simpsons-resources.ts'
 import { SIMPSONS_TAB_IDS, type SimpsonsTabId } from '../simpsons-tabs.ts'
 
-const TAB_NAV_CONFIG: Record<
-	SimpsonsTabId,
-	{ label: string; Icon: ComponentType }
-> = {
-	episodes: { label: 'Episodes', Icon: IconPlayCircle },
-	characters: { label: 'Characters', Icon: IconUser },
-	locations: { label: 'Locations', Icon: IconMapPin },
+const TAB_NAV_ICONS: Record<SimpsonsTabId, ComponentType> = {
+	episodes: IconPlayCircle,
+	characters: IconUser,
+	locations: IconMapPin,
 }
 
 export function simpsonsPanelId(tabId: SimpsonsTabId): string {
@@ -43,7 +41,8 @@ export function SimpsonsBottomNav({
 			}}
 		>
 			{SIMPSONS_TAB_IDS.map((tabId) => {
-				const { label, Icon } = TAB_NAV_CONFIG[tabId]
+				const label = SIMPSONS_RESOURCE_CONFIG[tabId].label
+				const Icon = TAB_NAV_ICONS[tabId]
 				const isSelected = tab === tabId
 
 				return (
