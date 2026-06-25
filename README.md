@@ -24,6 +24,7 @@ This project was developed using an agentic AI-assisted workflow (e.g. coding ag
 | `pnpm dev` | Start the Vite dev server with HMR |
 | `pnpm test` | Run unit tests once (Vitest) |
 | `pnpm test:watch` | Run unit tests in watch mode |
+| `pnpm test:coverage` | Run unit tests with coverage report |
 | `pnpm build` | Typecheck and production build to `dist/` |
 | `pnpm preview` | Serve the production build locally |
 | `pnpm typecheck` | Run `tsc --noEmit` |

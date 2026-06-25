@@ -15,5 +15,16 @@ export default defineConfig({
 	test: {
 		environment: 'node',
 		include: ['src/**/*.{test,spec}.{ts,tsx}'],
+		coverage: {
+			provider: 'v8',
+			include: ['src/**/*.{ts,tsx}'],
+			exclude: [
+				'src/**/*.{test,spec}.{ts,tsx}',
+				'src/routeTree.gen.ts',
+				'src/main.tsx',
+				'src/shoreline-css.d.ts',
+			],
+			reporter: ['text', 'html'],
+		},
 	},
 })

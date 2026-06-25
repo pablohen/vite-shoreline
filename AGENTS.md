@@ -11,6 +11,7 @@ pnpm install      # install dependencies
 pnpm dev          # Vite dev server with HMR
 pnpm test         # run unit tests once (Vitest)
 pnpm test:watch   # run unit tests in watch mode
+pnpm test:coverage # run unit tests with coverage report
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome check .
 pnpm format       # biome format --write .
@@ -26,7 +27,8 @@ Before claiming work is done:
 2. `pnpm typecheck`
 3. `pnpm lint`
 4. `pnpm build` — required for routing, Vite plugin, or config changes
-5. Manual smoke: switch tabs, paginate, open and close a detail drawer
+5. `pnpm test:coverage` — when changing tested modules
+6. Manual smoke: switch tabs, paginate, open and close a detail drawer
 
 ## Project layout
 
