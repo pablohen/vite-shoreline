@@ -22,7 +22,7 @@ type DetailDrawerContentResult<
 	hasContent: boolean
 }
 
-function buildDetailDrawerContent<
+export function buildDetailDrawerContent<
 	TDetail extends { name: string; description?: string },
 	TPreview extends { name: string } | null,
 >(
@@ -36,7 +36,7 @@ function buildDetailDrawerContent<
 ): DetailDrawerContentResult<TDetail, TPreview> {
 	const display = data ?? preview
 	const title = preview?.name ?? display?.name ?? defaultTitle
-	const descriptionText = data?.description?.trim()
+	const descriptionText = data?.description?.trim() || undefined
 	const errorMessage = getErrorMessage(isError, error, errorLabel)
 
 	return {
