@@ -8,6 +8,56 @@ import type { ComponentProps, ReactNode } from 'react'
 import { getCollectionViewStatus } from '../utils/collection-view-status.ts'
 import { TableAreaSkeleton } from './TableAreaSkeleton.tsx'
 
+export type ResourceTabPanelMessages =
+	| {
+			'error-heading': string
+			'error-action': string
+	  }
+	| {
+			'empty-heading': string
+			'empty-description': string
+	  }
+	| undefined
+
+export function getResourceTabPanelMessages(
+	listError: string | null,
+	isPending: boolean,
+	isError: boolean,
+	itemsLength: number,
+	paginationPage: number,
+	emptyHeading: string,
+	emptyDescription: string,
+): ResourceTabPanelMessages {
+	const isEmptyPage = paginationPage > 1 && itemsLength === 0
+
+	if (listError) {
+		return {
+			'error-heading': listError,
+			'error-action': 'Try again',
+		}
+	}
+
+	if (!isPending && !isError && itemsLength === 0) {
+		return {
+			'empty-heading': isEmptyPage
+				? `Nothing on page ${paginationPage}`
+				: emptyHeading,
+			'empty-description': isEmptyPage
+				? 'Try going back to a previous page.'
+				: emptyDescription,
+		}
+	}
+
+	return undefined
+}
+
+export function shouldShowTableSkeleton(
+	isFetching: boolean,
+	isPending: boolean,
+): boolean {
+	return isFetching && !isPending
+}
+
 export type ResourceTabPanelProps<T> = {
 	items: T[]
 	pagination: ComponentProps<typeof Pagination>
@@ -35,24 +85,16 @@ export function ResourceTabPanel<T>({
 	skeletonColumnCount = 4,
 	children,
 }: ResourceTabPanelProps<T>) {
-	const isEmptyPage = pagination.page > 1 && items.length === 0
-	const messages = listError
-		? {
-				'error-heading': listError,
-				'error-action': 'Try again',
-			}
-		: !isPending && !isError && items.length === 0
-			? {
-					'empty-heading': isEmptyPage
-						? `Nothing on page ${pagination.page}`
-						: emptyHeading,
-					'empty-description': isEmptyPage
-						? 'Try going back to a previous page.'
-						: emptyDescription,
-				}
-			: undefined
-
-	const showTableSkeleton = isFetching && !isPending
+	const messages = getResourceTabPanelMessages(
+		listError,
+		isPending,
+		isError,
+		items.length,
+		pagination.page,
+		emptyHeading,
+		emptyDescription,
+	)
+	const showTableSkeleton = shouldShowTableSkeleton(isFetching, isPending)
 
 	return (
 		<Collection>
