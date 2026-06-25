@@ -113,3 +113,36 @@ Project-specific rules (Biome handles the rest via `biome.json`):
 - Prefer extending generic shells (`ResourceTabPanel`, `DetailsDrawerShell`, `SelectableTable`) over duplicating layout
 - When adding a resource type, touch: schemas, client overloads, tab schema, resource config, table, drawer, browse queries, drawer state switch, and `BrowseDetailDrawer`
 - Update this file in the same PR if build commands or architecture change materially
+- When committing, use atomic conventional commits (see **Commits** below)
+
+## Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+type(optional-scope): imperative subject
+```
+
+- **type** — one of: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+- **scope** — optional, lowercase; use when it clarifies the area (e.g. `deps`, `tables`, `api`, `drawers`)
+- **subject** — imperative mood, lowercase, no trailing period; explain *why* when helpful
+
+**Atomicity**
+
+- One logical change per commit — a single concern that could be reverted independently
+- Split unrelated changes (e.g. feature + docs + lockfile bump → separate commits)
+- Do not mix refactors with behavior changes in the same commit
+- `chore(deps)` lockfile updates stay in their own commit when possible
+
+**Examples**
+
+```
+docs: add AGENTS.md for project overview and architecture
+feat(tests): add unit tests for Simpsons API client
+refactor(tables): extract shared table cell renderers
+chore(deps): upgrade vite to 8.1.0
+```
+
+**When to commit**
+
+- Only create commits when the user explicitly asks
