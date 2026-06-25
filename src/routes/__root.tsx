@@ -2,22 +2,12 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRootRoute, stripSearchParams } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ToastStack } from '@vtex/shoreline'
-import { z } from 'zod'
 import { SimpsonsBrowsePage } from '../pages/SimpsonsBrowsePage.tsx'
-import { type SimpsonsTabId, simpsonsTabSchema } from '../simpsons-tabs.ts'
-
-const defaultSearchValues = {
-	page: 1,
-	tab: 'episodes' as const satisfies SimpsonsTabId,
-}
-
-const searchSchema = z.object({
-	page: z.coerce.number().int().min(1).default(1).catch(1),
-	tab: simpsonsTabSchema,
-	detail: z.coerce.number().int().positive().optional().catch(undefined),
-})
-
-type AppSearch = z.infer<typeof searchSchema>
+import {
+	type AppSearch,
+	defaultSearchValues,
+	searchSchema,
+} from '../search-schema.ts'
 
 export const Route = createRootRoute({
 	validateSearch: searchSchema,
