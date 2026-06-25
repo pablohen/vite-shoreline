@@ -9,6 +9,8 @@ For human-oriented setup and features, see [README.md](README.md).
 ```bash
 pnpm install      # install dependencies
 pnpm dev          # Vite dev server with HMR
+pnpm test         # run unit tests once (Vitest)
+pnpm test:watch   # run unit tests in watch mode
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome check .
 pnpm format       # biome format --write .
@@ -18,12 +20,13 @@ pnpm preview      # serve production build locally
 
 ## Verification
 
-There is no test runner. Before claiming work is done:
+Before claiming work is done:
 
-1. `pnpm typecheck`
-2. `pnpm lint`
-3. `pnpm build` — required for routing, Vite plugin, or config changes
-4. Manual smoke: switch tabs, paginate, open and close a detail drawer
+1. `pnpm test`
+2. `pnpm typecheck`
+3. `pnpm lint`
+4. `pnpm build` — required for routing, Vite plugin, or config changes
+5. Manual smoke: switch tabs, paginate, open and close a detail drawer
 
 ## Project layout
 
